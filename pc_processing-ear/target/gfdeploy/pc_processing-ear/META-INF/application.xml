@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<application xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/application_6.xsd" version="6">
+  <description>Provides business logic for Parts Control for Tetra Pak Processing Equipment</description>
+  <display-name>pc_processing-ear</display-name>
+  <module>
+    <ejb>pc_data-ejb-1.0-SNAPSHOT.jar</ejb>
+  </module>
+  <module>
+    <web>
+      <web-uri>pc_processing-web-1.0-SNAPSHOT.war</web-uri>
+      <context-root>/pc_processing-web</context-root>
+    </web>
+  </module>
+  <library-directory>lib</library-directory>
+</application>

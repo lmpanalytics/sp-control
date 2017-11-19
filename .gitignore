@@ -43,3 +43,6 @@ Thumbs.db
 *.xlsx
 /target/
 /nbproject/
+/pc_data-ejb/target/
+/pc_processing-web/target/
+/pc_logic-ejb/target/
