@@ -11,6 +11,7 @@
     <module>pc_processing-web</module>
     <module>pc_data-ejb</module>
     <module>pc_logic-ejb</module>
+    <module>pc_data-common/pc_data-common</module>
   </modules>
     <description>Provides business logic for Parts Control for Tetra Pak Processing Equipment</description>
 </project>

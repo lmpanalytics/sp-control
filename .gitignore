@@ -46,3 +46,4 @@ Thumbs.db
 /pc_data-ejb/target/
 /pc_processing-web/target/
 /pc_logic-ejb/target/
+/pc_data-common/pc_data-common/target/
