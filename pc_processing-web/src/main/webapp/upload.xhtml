@@ -1,6 +1,6 @@
-<?xml version='1.0' encoding='UTF-8' ?>
+<?xml version="1.0" encoding="UTF-8"?>
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:f="http://java.sun.com/jsf/core"
@@ -12,12 +12,11 @@
         <h:head>
             <f:facet name="first">
                 <meta content='text/html; charset=UTF-8' http-equiv="Content-Type"/>
-                <title>PC Processing</title>
+                <title>Upload</title>
             </f:facet>
         </h:head>
 
         <h:body>
-
             <p:layout fullPage="true">
 
                 <p:layoutUnit position="north" size="200" resizable="true" closable="true" collapsible="true">
@@ -28,7 +27,7 @@
                             <ui:remove>
                                 <p:submenu label="File" icon="ui-icon-document">
                                     <p:submenu label="New" icon="ui-icon-contact">
-                                        <p:menuitem value="Data Upload" outcome="/upload"/>
+                                        <p:menuitem value="Data Upload" outcome="/upload" />
                                         <p:menuitem value="Other" url="#" />
                                     </p:submenu>
                                     <p:menuitem value="Open" url="#" />
@@ -37,9 +36,9 @@
                                 </p:submenu>
                             </ui:remove>
                             <p:submenu label="Data" >
-                                <p:menuitem value="Upload" outcome="/upload" />
+                                <p:menuitem value="Action1" outcome="/index" />
                                 <p:separator />
-                                <p:menuitem value="Merge" outcome="/train" />
+                                <p:menuitem value="Action2" outcome="/train" />
                             </p:submenu>
 
                             <ui:remove>
@@ -60,11 +59,11 @@
 
                                 <p:submenu label="Actions" icon="ui-icon-gear">
                                     <p:submenu label="Ajax" icon="ui-icon-refresh">
-                                        <p:menuitem value="Save" actionListener="#{menuBean.save}" icon="ui-icon-disk" update="messages"/>
-                                        <p:menuitem value="Update" actionListener="#{menuBean.update}" icon="ui-icon-arrowrefresh-1-w" update="messages"/>
+                                        <p:menuitem value="Save" actionListener="#{menuView.save}" icon="ui-icon-disk" update="messages"/>
+                                        <p:menuitem value="Update" actionListener="#{menuView.update}" icon="ui-icon-arrowrefresh-1-w" update="messages"/>
                                     </p:submenu>
                                     <p:submenu label="Non-Ajax" icon="ui-icon-newwin">
-                                        <p:menuitem value="Delete" actionListener="#{menuBean.delete}" icon="ui-icon-close" update="messages" ajax="false"/>
+                                        <p:menuitem value="Delete" actionListener="#{menuView.delete}" icon="ui-icon-close" update="messages" ajax="false"/>
                                     </p:submenu>
                                 </p:submenu>
 
@@ -79,9 +78,7 @@
                             </f:facet>
                         </p:menubar>
 
-                        <h2>Parts Control Processing</h2>
-                        <h6>#{dataClient.myData}, #{logicClient.myLogic}</h6>  
-
+                        <h1>Parts Control Processing</h1>
                     </h:form>
                 </p:layoutUnit>
 
@@ -90,33 +87,25 @@
                 </p:layoutUnit>
 
                 <p:layoutUnit position="west" size="175" header="Menu" collapsible="true">
-                    <h:form>
-                        <p:menu>
-                            <p:submenu label="Resources">
-                                <ui:remove>
-                                    <p:menuitem value="Forecast" action="#queryBean.doQuery()" icon="ui-icon-star" update="@all"/>
-                                </ui:remove>
-                            </p:submenu>
 
-                        </p:menu>
-
-                    </h:form>
+                    <p:button value="HOME" outcome="/index" icon="ui-icon-home"/>
                 </p:layoutUnit>
 
                 <p:layoutUnit position="center">
-                    <h:form>
-                        <ui:remove>
-                            <p:chart type="line" model="#dataViewBean.lineModelForecast" style="height:300px;" id="fcChart"/> 
-                        </ui:remove>
-                    </h:form>
-                </p:layoutUnit>
+                    <h:form>                         
+                        <p:fileUpload fileUploadListener="#{fileLoadBean.handleFileUpload}" mode="advanced" dragDropSupport="false"
+                                      update="@all" sizeLimit="1000000" fileLimit="1" allowTypes="/(\.|\/)(xlsx)$/" />
 
+                        <p:growl id="messages" showDetail="true" />
+
+                    </h:form>
+
+                    <h:form>
+                        insert table?
+                    </h:form>                   
+                </p:layoutUnit>
             </p:layout>
 
-            <br />
-            <h:link outcome="welcomePrimefaces" value="Primefaces welcome page" />
         </h:body>
-
     </f:view>
 </html>
-
