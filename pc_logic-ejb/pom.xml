@@ -21,10 +21,9 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.tetrapak.processing.parts_control</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>pc_logic-common</artifactId>
-            <version>1.0-SNAPSHOT</version>
-            <type>jar</type>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>javax</groupId>
