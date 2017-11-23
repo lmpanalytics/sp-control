@@ -4,21 +4,24 @@
  */
 package com.tetrapak.processing.parts_control.pc_logic_ejb;
 
+import java.io.Serializable;
 import javax.ejb.Stateless;
-import javax.ejb.LocalBean;
 
 /**
+ * Performs business logic
  *
  * @author Magnus Palm
  */
 @Stateless
-@LocalBean
-public class LogicBean {
+public class LogicBean implements Logic, Serializable {
 
-    public void businessMethod() {
+    private static final long serialVersionUID = 1L;
+
+    private String message;
+
+    @Override
+    public String sayHello() {
+        return message = "Hello from LogicBean";
     }
-
-    // Add business logic below. (Right-click in editor and choose
-    // "Insert Code > Add Business Method")
 
 }

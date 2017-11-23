@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.tetrapak.processing.parts_control.pc_data_ejb;
+package com.tetrapak.processing.parts_control.pc_logic_ejb;
 
 import javax.ejb.Remote;
 
@@ -12,7 +12,7 @@ import javax.ejb.Remote;
  * @author SEPALMM
  */
 @Remote
-public interface Data {
+public interface Logic {
 
     public String sayHello();
 
