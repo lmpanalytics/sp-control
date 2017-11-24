@@ -78,7 +78,7 @@
                             </f:facet>
                         </p:menubar>
 
-                        <h1>Parts Control Processing</h1>
+                        <h2>Parts Control Processing</h2>
                     </h:form>
                 </p:layoutUnit>
 
@@ -86,10 +86,37 @@
                     Footer
                 </p:layoutUnit>
 
-                <p:layoutUnit position="west" size="175" header="Menu" collapsible="true">
+                <p:layoutUnit position="west" size="225" header="Menu" collapsible="true">
 
                     <p:button value="HOME" outcome="/index" icon="ui-icon-home"/>
+
+                    <h:form>
+                        <p:messages autoUpdate="true" />
+
+                        <h:panelGrid columns="2" style="margin-bottom:10px" cellpadding="5">
+                            <p:outputLabel for="console" value="Type:" />
+                            <p:selectOneMenu id="console" value="#{fileTypeBean.fileType}" style="width:100px">
+                                <f:selectItem itemLabel="Select One" itemValue="N/A" />
+                                <f:selectItem itemLabel="Inventory" itemValue="Inventory" />
+                                <f:selectItem itemLabel="Purchases" itemValue="Purchases" />
+                                <f:selectItem itemLabel="Task List" itemValue="Task List" />
+                            </p:selectOneMenu>
+
+                        </h:panelGrid>
+
+                        <p:commandButton value="Submit" update="display" oncomplete="PF('dlg').show()" icon="ui-icon-check" />
+
+                    </h:form>
+
                 </p:layoutUnit>
+
+                <p:dialog header="Values" modal="true" showEffect="bounce" widgetVar="dlg" resizable="false">
+                    <p:panelGrid columns="2" id="display" columnClasses="label,value">
+                        <h:outputText value="File type:" />
+                        <h:outputText value="#{fileTypeBean.fileType}" />
+
+                    </p:panelGrid>
+                </p:dialog>
 
                 <p:layoutUnit position="center">
                     <h:form>                         
@@ -102,7 +129,7 @@
 
                     <h:form>
                         insert table?
-                    </h:form>                   
+                    </h:form>  
                 </p:layoutUnit>
             </p:layout>
 
