@@ -5,19 +5,22 @@
  */
 package com.tetrapak.processing.parts_control;
 
+import java.io.Serializable;
 import javax.annotation.PostConstruct;
-import javax.enterprise.context.RequestScoped;
+import javax.enterprise.context.SessionScoped;
 import javax.inject.Named;
 
 /**
- * Manages file type to upload
+ * Manages file type to upload. The bean is session scoped to keep in session
+ * the file type as the type needs to be accessible from the FileLoadBean.
  *
  * @author SEPALMM
  */
 @Named(value = "fileTypeBean")
-@RequestScoped
-public class FileTypeBean {
+@SessionScoped
+public class FileTypeBean implements Serializable {
 
+    private static final long serialVersionUID = 1L;
     private String fileType;
 
     /**
@@ -29,15 +32,13 @@ public class FileTypeBean {
     @PostConstruct
     public void init() {
 //        System.out.println("I'm in FileTypeBean init() method");
-        // Initialize filetype
-        this.fileType = "";
     }
 
     public String getFileType() {
         return fileType;
     }
 
-    private void setFileType(String fileType) {
+    public void setFileType(String fileType) {
         this.fileType = fileType;
 //        System.out.printf("Selected file type: %s\n", this.fileType);
     }

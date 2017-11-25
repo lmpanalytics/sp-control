@@ -12,7 +12,7 @@ package com.tetrapak.processing.parts_control;
  */
 public class TaskList {
 
-    private String machineNumber;
+    private int machineNumber;
     private String label;
     private String classItem;
     private String articleNo;
@@ -22,10 +22,10 @@ public class TaskList {
     private String description;
     private String sparePartNo;
     private String spDenomination;
-    private String qty;
+    private int qty;
     private String functionalArea;
 
-    public TaskList(String machineNumber, String label, String classItem, String articleNo, String eqDenomination, String type, String docNo, String description, String sparePartNo, String spDenomination, String qty, String functionalArea) {
+    public TaskList(int machineNumber, String label, String classItem, String articleNo, String eqDenomination, String type, String docNo, String description, String sparePartNo, String spDenomination, int qty, String functionalArea) {
         this.machineNumber = machineNumber;
         this.label = label;
         this.classItem = classItem;
@@ -40,7 +40,7 @@ public class TaskList {
         this.functionalArea = functionalArea;
     }
 
-    public String getMachineNumber() {
+    public int getMachineNumber() {
         return machineNumber;
     }
 
@@ -80,7 +80,7 @@ public class TaskList {
         return spDenomination;
     }
 
-    public String getQty() {
+    public int getQty() {
         return qty;
     }
 

@@ -17,7 +17,7 @@
         </h:head>
 
         <h:body>
-            <p:layout fullPage="true">
+            <p:layout fullPage="false">
 
                 <p:layoutUnit position="north" size="200" resizable="true" closable="true" collapsible="true">
                     <h:form>  
@@ -121,7 +121,7 @@
                 <p:layoutUnit position="center">
                     <h:form>                         
                         <p:fileUpload fileUploadListener="#{fileLoadBean.handleFileUpload}" mode="advanced" dragDropSupport="false"
-                                      update="@all" sizeLimit="1000000" fileLimit="1" allowTypes="/(\.|\/)(xlsx)$/" />
+                                      update="@all" sizeLimit="100000000" fileLimit="1" allowTypes="/(\.|\/)(xlsx)$/" />
 
                         <p:growl id="messages" showDetail="true" />
 
