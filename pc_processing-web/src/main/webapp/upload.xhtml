@@ -17,9 +17,10 @@
         </h:head>
 
         <h:body>
-            <p:layout fullPage="false">
+            <h:outputStylesheet name="css/default.css" />
+            <p:layout fullPage="true">
 
-                <p:layoutUnit position="north" size="200" resizable="true" closable="true" collapsible="true">
+                <p:layoutUnit position="north" size="125" resizable="true" closable="true" collapsible="true">
                     <h:form>  
                         <p:growl id="messages"/>
 
@@ -78,24 +79,23 @@
                             </f:facet>
                         </p:menubar>
 
-                        <h2>Parts Control Processing</h2>
+                        <h1>Parts Control Processing</h1>
                     </h:form>
                 </p:layoutUnit>
 
-                <p:layoutUnit position="south" size="100" closable="true" collapsible="true">
+                <p:layoutUnit position="south" size="75" closable="true" collapsible="true">
                     Footer
                 </p:layoutUnit>
 
                 <p:layoutUnit position="west" size="225" header="Menu" collapsible="true">
 
-                    <p:button value="HOME" outcome="/index" icon="ui-icon-home"/>
 
                     <h:form>
                         <p:messages autoUpdate="true" />
 
                         <h:panelGrid columns="2" style="margin-bottom:10px" cellpadding="5">
-                            <p:outputLabel for="console" value="Type:" />
-                            <p:selectOneMenu id="console" value="#{fileTypeBean.fileType}" style="width:100px">
+                            <p:outputLabel for="console" value="Select file type:" />
+                            <p:selectOneMenu id="console" value="#{fileTypeBean.fileType}" style="width:75px">
                                 <f:selectItem itemLabel="Select One" itemValue="N/A" />
                                 <f:selectItem itemLabel="Inventory" itemValue="Inventory" />
                                 <f:selectItem itemLabel="Purchases" itemValue="Purchases" />
@@ -108,9 +108,11 @@
 
                     </h:form>
 
+                    <p:button value="HOME" outcome="/index" icon="ui-icon-home"/>   
+
                 </p:layoutUnit>
 
-                <p:dialog header="Values" modal="true" showEffect="bounce" widgetVar="dlg" resizable="false">
+                <p:dialog header="Values" modal="true" widgetVar="dlg" resizable="false">
                     <p:panelGrid columns="2" id="display" columnClasses="label,value">
                         <h:outputText value="File type:" />
                         <h:outputText value="#{fileTypeBean.fileType}" />
