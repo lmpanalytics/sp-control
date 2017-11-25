@@ -37,7 +37,7 @@ public class FileTypeBean {
         return fileType;
     }
 
-    public void setFileType(String fileType) {
+    private void setFileType(String fileType) {
         this.fileType = fileType;
 //        System.out.printf("Selected file type: %s\n", this.fileType);
     }
