@@ -13,6 +13,8 @@
     <module>pc_logic-ejb</module>
     <module>pc_data-common/pc_data-common</module>
     <module>pc_logic-common</module>
+    <module>pc_neo4j_service-ejb</module>
+    <module>pc_neo4j_service-common</module>
   </modules>
     <description>Provides business logic for Parts Control for Tetra Pak Processing Equipment</description>
 </project>

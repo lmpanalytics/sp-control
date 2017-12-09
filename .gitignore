@@ -49,3 +49,5 @@ Thumbs.db
 /pc_data-common/pc_data-common/target/
 /pc_logic-common/target/
 /pc_processing-ear/target/
+/pc_neo4j_service-common/target/
+/pc_neo4j_service-ejb/target/

@@ -8,6 +8,7 @@ package com.tetrapak.processing.parts_control.pc_data_ejb;
 import javax.ejb.Remote;
 
 /**
+ * Remote business interface for the Data Bean.
  *
  * @author SEPALMM
  */

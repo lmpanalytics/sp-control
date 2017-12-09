@@ -8,6 +8,7 @@ package com.tetrapak.processing.parts_control.pc_logic_ejb;
 import javax.ejb.Remote;
 
 /**
+ * Remote business interface for the Logic Bean.
  *
  * @author SEPALMM
  */

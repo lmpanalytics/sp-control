@@ -67,5 +67,15 @@
             <artifactId>pc_logic-ejb</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>pc_neo4j_service-ejb</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>pc_neo4j_service-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 </project>
