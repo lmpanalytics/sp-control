@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.tetrapak.processing.parts_control;
+package com.tetrapak.processing.parts_control.beans;
 
 import javax.inject.Named;
 import javax.enterprise.context.Dependent;

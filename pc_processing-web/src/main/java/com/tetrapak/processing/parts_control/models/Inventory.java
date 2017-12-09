@@ -3,20 +3,20 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.tetrapak.processing.parts_control;
+package com.tetrapak.processing.parts_control.models;
 
 /**
- * Models purchase data
+ * Models inventory data
  *
  * @author SEPALMM
  */
-public class Purchases {
+public class Inventory {
 
     private String material;
     private String description;
     private int quantity;
 
-    public Purchases(String material, String description, int quantity) {
+    public Inventory(String material, String description, int quantity) {
         this.material = material;
         this.description = description;
         this.quantity = quantity;

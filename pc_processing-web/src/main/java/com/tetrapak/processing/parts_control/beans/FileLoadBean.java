@@ -3,8 +3,11 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.tetrapak.processing.parts_control;
+package com.tetrapak.processing.parts_control.beans;
 
+import com.tetrapak.processing.parts_control.models.TaskList;
+import com.tetrapak.processing.parts_control.models.Purchases;
+import com.tetrapak.processing.parts_control.models.Inventory;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
