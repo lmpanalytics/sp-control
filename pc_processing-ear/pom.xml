@@ -77,5 +77,10 @@
             <artifactId>pc_neo4j_service-common</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>pc_models</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 </project>
