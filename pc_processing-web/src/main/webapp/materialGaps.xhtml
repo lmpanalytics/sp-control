@@ -1,6 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
-<!DOCTYPE html>
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:f="http://java.sun.com/jsf/core"
@@ -12,7 +11,7 @@
         <h:head>
             <f:facet name="first">
                 <meta content='text/html; charset=UTF-8' http-equiv="Content-Type"/>
-                <title>Upload</title>
+                <title>Material Gap</title>
             </f:facet>
         </h:head>
 
@@ -39,7 +38,7 @@
                             <p:submenu label="Data" >
                                 <p:menuitem value="Action1" outcome="/index" />
                                 <p:separator />
-                                <p:menuitem value="Material Gaps" outcome="/materialGaps" />
+                                <p:menuitem value="Upload" outcome="/upload" />
                             </p:submenu>
 
                             <ui:remove>
@@ -100,17 +99,19 @@
                         <p:messages autoUpdate="true" />
 
                         <h:panelGrid columns="2" style="margin-bottom:10px" cellpadding="5">
-                            <p:outputLabel for="console" value="Select file type:" />
-                            <p:selectOneMenu id="console" value="#{fileTypeBean.fileType}" style="width:75px">
-                                <f:selectItem itemLabel="Select One" itemValue="N/A" />
-                                <f:selectItem itemLabel="Inventory" itemValue="Inventory" />
-                                <f:selectItem itemLabel="Purchases" itemValue="Purchases" />
-                                <f:selectItem itemLabel="Task List" itemValue="Task List" />
-                            </p:selectOneMenu>
+
+
+                            <p:selectCheckboxMenu id="console" value="#{customerViewBean.selectedCustomers}" label="Customers"
+                                                  filter="true" filterMatchMode="contains" panelStyle="width:250px">
+                                <f:selectItems value="#{customerViewBean.customers}" />
+                            </p:selectCheckboxMenu>
+                            <p:commandButton value="Submit" update="displayItems" oncomplete="PF('itemDialog').show()" style="margin-top:5px;" />
 
                         </h:panelGrid>
 
-                        <p:commandButton value="Submit" update="display" oncomplete="PF('dlg').show()" icon="ui-icon-check" />
+                        <p:commandButton value="Calculate" style="margin-top:10px;" >
+                            <p:ajax update=":dataTables" listener="#{customerViewBean.collectSelectedCustomerIds}"/>
+                        </p:commandButton>
 
                     </h:form>
 
@@ -118,25 +119,46 @@
 
                 </p:layoutUnit>
 
-                <p:dialog header="Values" modal="true" widgetVar="dlg" resizable="false">
-                    <p:panelGrid columns="2" id="display" columnClasses="label,value">
-                        <h:outputText value="File type:" />
-                        <h:outputText value="#{fileTypeBean.fileType}" />
+                <p:dialog header="Selected Items" modal="true" showEffect="fade" hideEffect="fade" widgetVar="itemDialog" width="250">
 
-                    </p:panelGrid>
+                    <p:outputPanel id="displayItems">
+                        <p:dataList value="#{customerViewBean.selectedCustomers}" var="customer" emptyMessage="No customer selected" style="margin-bottom: 10px; ">
+                            <f:facet name="header">
+                                Customer
+                            </f:facet>
+                            #{customer}
+                        </p:dataList>
+                    </p:outputPanel>
                 </p:dialog>
 
                 <p:layoutUnit position="center">
-                    <h:form>                         
-                        <p:fileUpload fileUploadListener="#{fileLoadBean.handleFileUpload}" mode="advanced" dragDropSupport="false"
-                                      update="@all" sizeLimit="100000000" fileLimit="1" allowTypes="/(\.|\/)(xlsx)$/" />
 
-                        <p:growl id="messages" showDetail="true" />
+                    <h:form id="dataTables">
 
-                    </h:form>
+                        <h5>Materials in customer's Stock or Cart purchase history that DO NOT EXIST in the Task Lists</h5>
 
-                    <h:form>
-                        insert table?
+                        <p:dataTable var="mtrl" value="#{taskListGapViewBean.mtrlList}" resizableColumns="true" scrollable="true" scrollHeight="150" id="taskListGapTable">
+                            <p:column headerText="ASSORTMENT GROUP" sortBy="#{mtrl.assortmentGroup}">
+                                <h:outputText value="#{mtrl.assortmentGroup}" />
+                            </p:column>
+
+                            <p:column headerText="MPG" sortBy="#{mtrl.mpg}">
+                                <h:outputText value="#{mtrl.mpg}" />
+                            </p:column>
+
+                            <p:column headerText="MTRL NUMBER" sortBy="#{mtrl.materialNumber}">
+                                <h:outputText value="#{mtrl.materialNumber}" />
+                            </p:column>
+
+                            <p:column headerText="DESCRIPTION" sortBy="#{mtrl.description}">
+                                <h:outputText value="#{mtrl.description}" />
+                            </p:column>
+
+                            <p:column headerText="PG [EUR]" style="text-align:right" sortBy="#{mtrl.pg}">
+                                <h:outputText value="#{mtrl.pg}" />
+                            </p:column>
+                        </p:dataTable>
+
                     </h:form>  
                 </p:layoutUnit>
             </p:layout>

@@ -35,7 +35,7 @@ public class DataBean implements Data, Serializable {
     private String message;
     private static final Logger LOGGER = LoggerFactory.getLogger(DataBean.class);
     private static Session session;
-    private static Map<String, Material> materialMap;
+    private static Map<String, Material> taskListGapMaterialMap;
 
     @PostConstruct
     public void init() {
@@ -43,7 +43,7 @@ public class DataBean implements Data, Serializable {
 
         // Initialize driver
         session = neo4jServiceBean.getDRIVER().session();
-        materialMap = new HashMap();
+        taskListGapMaterialMap = new HashMap();
     }
 
     @Override
@@ -55,26 +55,29 @@ public class DataBean implements Data, Serializable {
      * Find materials in customer's Stock or Cart purchase history that do not
      * exist in the TaskList.
      *
-     * @param customerNumber
+     * @param customerNumbers
      */
     @Override
-    public void findTaskListGap(String customerNumber) {
-
+    public void findTaskListGap(String[] customerNumbers) {
         try {
-            String id = customerNumber;
-
-            String tx = "MATCH (m:PcMaterial)-[:STOCKED_IN|:PURCHASED_IN]->(n {id:$custNo}) "
-                    + "OPTIONAL MATCH (m)-[r:LISTED_IN]->(t:TaskList {id:$custNo}) "
+//            Initiate gap counter
+            int gapCounter = 0;
+            taskListGapMaterialMap.clear();
+            String tx = "MATCH (m:PcMaterial)-[:STOCKED_IN|:PURCHASED_IN]->(n) "
+                    + "WHERE n.id IN {custNumbers}"
+                    + "OPTIONAL MATCH (m)-[r:LISTED_IN]->(t:TaskList) "
+                    + "WHERE t.id IN {custNumbers}"
                     + "WITH m.materialNumber AS mtrlNo, m, r "
                     + "WHERE r IS NULL "
                     + "WITH DISTINCT mtrlNo, m "
                     + "RETURN m.assortmentGroup AS aGrp, m.mpg AS mpg, mtrlNo, m.description AS desc, m.pg AS pg";
 
             StatementResult result = session.run(tx, Values.parameters(
-                    "custNo", id
+                    "custNumbers", customerNumbers
             ));
 
             while (result.hasNext()) {
+                gapCounter++;
                 Record next = result.next();
 
                 String assortmentGroup = next.get("aGrp").asString();
@@ -84,8 +87,10 @@ public class DataBean implements Data, Serializable {
                 Double pg = Double.valueOf(next.get("pg").asString());
 
 //                System.out.printf("Assortment Group: %s, MPG: %s, MaterialNo: %s, Description: %s, PG %f\n",assortmentGroup, mpg, materialNumber, description, pg);
-                materialMap.put(materialNumber, new Material(assortmentGroup, description, materialNumber, mpg, pg));
+                taskListGapMaterialMap.put(materialNumber, new Material(assortmentGroup, description, materialNumber, mpg, pg));
             }
+
+            LOGGER.info("Queried and found {} Task list gap(s).", gapCounter);
 
         } catch (Exception e) {
             LOGGER.error("Could not query the Task List gap. Error message: {}", e.getMessage());
@@ -93,13 +98,13 @@ public class DataBean implements Data, Serializable {
     }
 
     @Override
-    public Map<String, Material> getMaterialMap() {
-        return materialMap;
+    public Map<String, Material> getTaskListGapMaterialMap() {
+        return taskListGapMaterialMap;
     }
 
     @Override
-    public void setMaterialMap(Map<String, Material> materialMap) {
-        DataBean.materialMap = materialMap;
+    public void setTaskListGapMaterialMap(Map<String, Material> taskListGapMaterialMap) {
+        DataBean.taskListGapMaterialMap = taskListGapMaterialMap;
     }
 
 }

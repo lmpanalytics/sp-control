@@ -19,10 +19,10 @@ public interface Data {
 
     public String sayHello();
 
-    public void findTaskListGap(String customerNumber);
+    public void findTaskListGap(String[] customerNumber);
 
-    public Map<String, Material> getMaterialMap();
+    public Map<String, Material> getTaskListGapMaterialMap();
 
-    public void setMaterialMap(Map<String, Material> materialMap);
+    public void setTaskListGapMaterialMap(Map<String, Material> materialMap);
 
 }
