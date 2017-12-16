@@ -36,6 +36,7 @@ public class DataBean implements Data, Serializable {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataBean.class);
     private static Session session;
     private static Map<String, Material> taskListGapMaterialMap;
+    private static Map<String, Material> customerGapMaterialMap;
 
     @PostConstruct
     public void init() {
@@ -43,7 +44,9 @@ public class DataBean implements Data, Serializable {
 
         // Initialize driver
         session = neo4jServiceBean.getDRIVER().session();
-        taskListGapMaterialMap = new HashMap();
+        // Initialize material maps
+        taskListGapMaterialMap = new HashMap<>();
+        customerGapMaterialMap = new HashMap<>();
     }
 
     @Override
@@ -97,6 +100,52 @@ public class DataBean implements Data, Serializable {
         }
     }
 
+    /**
+     * "Find materials in the TaskList that do not exist in the customer's Stock
+     * or Cart purchase history"
+     *
+     * @param customerNumbers
+     */
+    @Override
+    public void findCustomerGap(String[] customerNumbers) {
+        try {
+//            Initiate gap counter
+            int gapCounter = 0;
+            customerGapMaterialMap.clear();
+            String tx = "MATCH (m:PcMaterial)-[:LISTED_IN]->(t:TaskList) "
+                    + "WHERE t.id IN {custNumbers} "
+                    + "OPTIONAL MATCH (m)-[r:STOCKED_IN|:PURCHASED_IN]->(n) "
+                    + "WHERE n.id IN {custNumbers} "
+                    + "WITH m.materialNumber AS mtrlNo, m, r "
+                    + "WHERE r IS NULL "
+                    + "WITH DISTINCT mtrlNo, m "
+                    + "RETURN m.assortmentGroup AS aGrp, m.mpg AS mpg, mtrlNo, m.description AS desc, m.pg AS pg";
+
+            StatementResult result = session.run(tx, Values.parameters(
+                    "custNumbers", customerNumbers
+            ));
+
+            while (result.hasNext()) {
+                gapCounter++;
+                Record next = result.next();
+
+                String assortmentGroup = next.get("aGrp").asString();
+                String mpg = next.get("mpg").asString();
+                String materialNumber = next.get("mtrlNo").asString();
+                String description = next.get("desc").asString();
+                Double pg = Double.valueOf(next.get("pg").asString());
+
+//                System.out.printf("Assortment Group: %s, MPG: %s, MaterialNo: %s, Description: %s, PG %f\n",assortmentGroup, mpg, materialNumber, description, pg);
+                customerGapMaterialMap.put(materialNumber, new Material(assortmentGroup, description, materialNumber, mpg, pg));
+            }
+
+            LOGGER.info("Queried and found {} Customer material gap(s).", gapCounter);
+
+        } catch (Exception e) {
+            LOGGER.error("Could not query the Customer material gap. Error message: {}", e.getMessage());
+        }
+    }
+
     @Override
     public Map<String, Material> getTaskListGapMaterialMap() {
         return taskListGapMaterialMap;
@@ -105,6 +154,16 @@ public class DataBean implements Data, Serializable {
     @Override
     public void setTaskListGapMaterialMap(Map<String, Material> taskListGapMaterialMap) {
         DataBean.taskListGapMaterialMap = taskListGapMaterialMap;
+    }
+
+    @Override
+    public Map<String, Material> getCustomerGapMaterialMap() {
+        return customerGapMaterialMap;
+    }
+
+    @Override
+    public void setCustomerGapMaterialMap(Map<String, Material> materialMap) {
+        DataBean.customerGapMaterialMap = customerGapMaterialMap;
     }
 
 }

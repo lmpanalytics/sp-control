@@ -21,8 +21,14 @@ public interface Data {
 
     public void findTaskListGap(String[] customerNumber);
 
+    public void findCustomerGap(String[] customerNumbers);
+
     public Map<String, Material> getTaskListGapMaterialMap();
 
     public void setTaskListGapMaterialMap(Map<String, Material> materialMap);
+
+    public Map<String, Material> getCustomerGapMaterialMap();
+
+    public void setCustomerGapMaterialMap(Map<String, Material> materialMap);
 
 }

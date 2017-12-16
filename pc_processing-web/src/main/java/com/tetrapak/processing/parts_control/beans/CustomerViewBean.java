@@ -30,6 +30,9 @@ import org.slf4j.LoggerFactory;
  * The bean receives a String array of selected composite customer id + name
  * keys from user input on jsf 'taskListGap'.
  *
+ * The bean calls the Task list- and Customer Gap View Beans and process the
+ * material gaps.
+ *
  * @author SEPALMM
  */
 @Named(value = "customerViewBean")
@@ -41,6 +44,9 @@ public class CustomerViewBean implements Serializable {
 
     @Inject
     TaskListGapViewBean taskListGapViewBean;
+
+    @Inject
+    CustomerGapViewBean customerGapViewBean;
 
     private static final long serialVersionUID = 1L;
     private List<String> customers;
@@ -122,6 +128,9 @@ public class CustomerViewBean implements Serializable {
 
         // Call taskListGapViewBean and process the Task list gaps
         taskListGapViewBean.processTaskListGap();
+
+        // Call customerGapViewBean and process the customer material gaps
+        customerGapViewBean.processCustomerGap();
     }
 
     public List<String> getCustomers() {

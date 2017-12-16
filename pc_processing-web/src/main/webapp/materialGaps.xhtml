@@ -135,9 +135,34 @@
 
                     <h:form id="dataTables">
 
-                        <h5>Materials in customer's Stock or Cart purchase history that DO NOT EXIST in the Task Lists</h5>
+                        <h5>Materials in customer's Stock or Cart purchase history that DO NOT EXIST in the Task Lists:</h5>
 
                         <p:dataTable var="mtrl" value="#{taskListGapViewBean.mtrlList}" resizableColumns="true" scrollable="true" scrollHeight="150" id="taskListGapTable">
+                            <p:column headerText="ASSORTMENT GROUP" sortBy="#{mtrl.assortmentGroup}">
+                                <h:outputText value="#{mtrl.assortmentGroup}" />
+                            </p:column>
+
+                            <p:column headerText="MPG" sortBy="#{mtrl.mpg}">
+                                <h:outputText value="#{mtrl.mpg}" />
+                            </p:column>
+
+                            <p:column headerText="MTRL NUMBER" sortBy="#{mtrl.materialNumber}">
+                                <h:outputText value="#{mtrl.materialNumber}" />
+                            </p:column>
+
+                            <p:column headerText="DESCRIPTION" sortBy="#{mtrl.description}">
+                                <h:outputText value="#{mtrl.description}" />
+                            </p:column>
+
+                            <p:column headerText="PG [EUR]" style="text-align:right" sortBy="#{mtrl.pg}">
+                                <h:outputText value="#{mtrl.pg}" />
+                            </p:column>
+                        </p:dataTable>
+
+
+                        <h5>Materials in the Task list that DO NOT EXIST in the customer's Stock or Purchase history:</h5>
+
+                        <p:dataTable var="mtrl" value="#{customerGapViewBean.mtrlList}" resizableColumns="true" scrollable="true" scrollHeight="150" id="customerGapTable">
                             <p:column headerText="ASSORTMENT GROUP" sortBy="#{mtrl.assortmentGroup}">
                                 <h:outputText value="#{mtrl.assortmentGroup}" />
                             </p:column>
