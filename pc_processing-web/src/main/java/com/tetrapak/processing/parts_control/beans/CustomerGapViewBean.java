@@ -11,7 +11,6 @@ import javax.inject.Named;
 import javax.enterprise.context.SessionScoped;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
@@ -50,7 +49,7 @@ public class CustomerGapViewBean implements Serializable {
         // INITIATE CLASS SPECIFIC MAPS AND FIELDS HERE - THE ORDER IS IMPORTANT
 
         // Initiate mtrlList
-        mtrlList = new LinkedList<>();
+        mtrlList = new ArrayList<>();
     }
 
     public void processCustomerGap() {
