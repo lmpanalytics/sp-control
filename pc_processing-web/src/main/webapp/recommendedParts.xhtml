@@ -11,7 +11,7 @@
         <h:head>
             <f:facet name="first">
                 <meta content='text/html; charset=UTF-8' http-equiv="Content-Type"/>
-                <title>Material Gaps</title>
+                <title>Recommended Parts</title>
             </f:facet>
         </h:head>
 
@@ -40,7 +40,7 @@
                                 <p:separator />
                                 <p:menuitem value="Upload" outcome="/upload" />
                                 <p:separator />
-                                <p:menuitem value="Recommended Parts" outcome="/recommendedParts" />
+                                <p:menuitem value="Material Gaps" outcome="/materialGaps" />
                             </p:submenu>
 
                             <ui:remove>
@@ -96,26 +96,27 @@
 
                 <p:layoutUnit position="west" size="225" header="Menu" collapsible="true">
 
+                    <ui:remove>
+                        <h:form>
+                            <p:messages autoUpdate="true" />
 
-                    <h:form>
-                        <p:messages autoUpdate="true" />
-
-                        <h:panelGrid columns="2" style="margin-bottom:10px" cellpadding="5">
+                            <h:panelGrid columns="2" style="margin-bottom:10px" cellpadding="5">
 
 
-                            <p:selectCheckboxMenu id="console" value="#{customerViewBean.selectedCustomers}" label="Customers"
-                                                  filter="true" filterMatchMode="contains" panelStyle="width:250px">
-                                <f:selectItems value="#{customerViewBean.customers}" />
-                            </p:selectCheckboxMenu>
-                            <p:commandButton value="Submit" update="displayItems" oncomplete="PF('itemDialog').show()" style="margin-top:5px;" />
+                                <p:selectCheckboxMenu id="console" value="#{customerViewBean.selectedCustomers}" label="Customers"
+                                                      filter="true" filterMatchMode="contains" panelStyle="width:250px">
+                                    <f:selectItems value="#{customerViewBean.customers}" />
+                                </p:selectCheckboxMenu>
+                                <p:commandButton value="Submit" update="displayItems" oncomplete="PF('itemDialog').show()" style="margin-top:5px;" />
 
-                        </h:panelGrid>
+                            </h:panelGrid>
 
-                        <p:commandButton value="Calculate" style="margin-top:10px;" >
-                            <p:ajax update=":dataTables" listener="#{customerViewBean.collectSelectedCustomerIds}"/>
-                        </p:commandButton>
+                            <p:commandButton value="Calculate" style="margin-top:10px;" >
+                                <p:ajax update=":dataTables" listener="#{customerViewBean.collectSelectedCustomerIds}"/>
+                            </p:commandButton>
 
-                    </h:form>
+                        </h:form>
+                    </ui:remove>
 
                     <p:button value="HOME" outcome="/index" icon="ui-icon-home"/>   
 
@@ -137,66 +138,71 @@
 
                     <h:form id="dataTables">
 
-                        <!--h5>Materials in customer's Stock or Cart purchase history that DO NOT EXIST in the Task Lists:</h5-->
-
-                        <p:dataTable var="mtrl" value="#{taskListGapViewBean.mtrlList}" resizableColumns="true" scrollable="true" scrollHeight="150" id="taskListGapTable">
+                        <p:dataTable id="taskListsTable" var="var" value="#{taskListViewBean.taskLists}" selection="#{taskListViewBean.selectedTaskList}" rowKey="#{var.id}" resizableColumns="true" scrollable="true" scrollHeight="150" >
                             <f:facet name="header">
-                                Materials in customer's Stock or Cart purchase history that DO NOT EXIST in the Task Lists
+                                TASK LISTS (F5 TO REFRESH)
                             </f:facet>
-                            <p:column headerText="ASSORTMENT GROUP" sortBy="#{mtrl.assortmentGroup}">
-                                <h:outputText value="#{mtrl.assortmentGroup}" />
+                            <p:column selectionMode="single" style="width:16px;text-align:center"/>
+                            <p:column headerText="ID" sortBy="#{var.id}">
+                                <h:outputText value="#{var.id}" />
                             </p:column>
 
-                            <p:column headerText="MPG" sortBy="#{mtrl.mpg}">
-                                <h:outputText value="#{mtrl.mpg}" />
+                            <p:column headerText="DESCRIPTION" sortBy="#{var.description}">
+                                <h:outputText value="#{var.description}" />
                             </p:column>
 
-                            <p:column headerText="MTRL NUMBER" sortBy="#{mtrl.materialNumber}">
-                                <h:outputText value="#{mtrl.materialNumber}" />
+                            <p:column headerText="VERSION" sortBy="#{var.version}">
+                                <h:outputText value="#{var.version}" />
                             </p:column>
 
-                            <p:column headerText="DESCRIPTION" sortBy="#{mtrl.description}">
-                                <h:outputText value="#{mtrl.description}" />
+                            <p:column headerText="DATE OF ANALYSIS" sortBy="#{var.dateOfAnalysis}">
+                                <h:outputText value="#{var.dateOfAnalysis}" />
                             </p:column>
 
-                            <p:column headerText="PG" style="text-align:right" sortBy="#{mtrl.pg}">
-                                <h:outputText value="#{mtrl.pg}" >
-                                    <f:convertNumber currencySymbol="&euro;" type="currency"/>
-                                </h:outputText>
+                            <p:column headerText="USER ID" sortBy="#{var.userID}">
+                                <h:outputText value="#{var.userID}" />
                             </p:column>
+                            <f:facet name="footer">
+                                <p:commandButton process="taskListsTable" icon="ui-icon-check" value="CALCULATE PARTS" action="#{materialResultViewBean.showSelectedTaskList()}">
+                                    <!-->Add Ajax to refresh table below??</--> 
+                                </p:commandButton>
+
+                            </f:facet>
                         </p:dataTable>
 
+                        <p></p> 
 
-                        <!--h5>Materials in the Task list that DO NOT EXIST in the customer's Stock or Purchase history:</h5-->
+                        <ui:remove>
 
-                        <p:dataTable var="mtrl" value="#{customerGapViewBean.mtrlList}" resizableColumns="true" scrollable="true" scrollHeight="150" id="customerGapTable">
-                            <f:facet name="header">
-                                Materials in the Task list that DO NOT EXIST in the customer's Stock or Purchase history
-                            </f:facet>
-                            <p:column headerText="ASSORTMENT GROUP" sortBy="#{mtrl.assortmentGroup}">
-                                <h:outputText value="#{mtrl.assortmentGroup}" />
-                            </p:column>
+                            <p:dataTable id="recommendedPartsTable" var="var" value="#{taskListViewBean.taskLists}" resizableColumns="true" scrollable="true" scrollHeight="150" >
+                                <f:facet name="header">
+                                    RECOMMENDED PARTS
+                                </f:facet>
+                                <p:column headerText="ASSORTMENT GROUP" sortBy="#{var.assortmentGroup}">
+                                    <h:outputText value="#{var.assortmentGroup}" />
+                                </p:column>
 
-                            <p:column headerText="MPG" sortBy="#{mtrl.mpg}">
-                                <h:outputText value="#{mtrl.mpg}" />
-                            </p:column>
+                                <p:column headerText="MPG" sortBy="#{var.mpg}">
+                                    <h:outputText value="#{var.mpg}" />
+                                </p:column>
 
-                            <p:column headerText="MTRL NUMBER" sortBy="#{mtrl.materialNumber}">
-                                <h:outputText value="#{mtrl.materialNumber}" />
-                            </p:column>
+                                <p:column headerText="MTRL NUMBER" sortBy="#{var.materialNumber}">
+                                    <h:outputText value="#{var.materialNumber}" />
+                                </p:column>
 
-                            <p:column headerText="DESCRIPTION" sortBy="#{mtrl.description}">
-                                <h:outputText value="#{mtrl.description}" />
-                            </p:column>
+                                <p:column headerText="DESCRIPTION" sortBy="#{var.description}">
+                                    <h:outputText value="#{var.description}" />
+                                </p:column>
 
-                            <p:column headerText="PG" style="text-align:right" sortBy="#{mtrl.pg}">
-                                <h:outputText value="#{mtrl.pg}" >
-                                    <f:convertNumber currencySymbol="&euro;" type="currency"/>
-                                </h:outputText>
-                            </p:column>
-                        </p:dataTable>
+                                <p:column headerText="PG" style="text-align:right" sortBy="#{var.pg}">
+                                    <h:outputText value="#{var.pg}" >
+                                        <f:convertNumber currencySymbol="&euro;" type="currency"/>
+                                    </h:outputText>
+                                </p:column>
+                            </p:dataTable>
+                        </ui:remove> 
+                    </h:form> 
 
-                    </h:form>  
                 </p:layoutUnit>
             </p:layout>
 

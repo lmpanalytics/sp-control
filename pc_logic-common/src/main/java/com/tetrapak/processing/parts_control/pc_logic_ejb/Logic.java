@@ -5,6 +5,8 @@
  */
 package com.tetrapak.processing.parts_control.pc_logic_ejb;
 
+import com.tetrapak.processing.parts_control.pc_models.LogicParameters;
+import com.tetrapak.processing.parts_control.pc_models.TaskListMetaData;
 import javax.ejb.Remote;
 
 /**
@@ -16,5 +18,7 @@ import javax.ejb.Remote;
 public interface Logic {
 
     public String sayHello();
+
+   public void calculateInventory(TaskListMetaData taskListMetaData, LogicParameters logicParameters);
 
 }
