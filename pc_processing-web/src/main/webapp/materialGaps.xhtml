@@ -137,8 +137,6 @@
 
                     <h:form id="dataTables">
 
-                        <!--h5>Materials in customer's Stock or Cart purchase history that DO NOT EXIST in the Task Lists:</h5-->
-
                         <p:dataTable var="mtrl" value="#{taskListGapViewBean.mtrlList}" resizableColumns="true" scrollable="true" scrollHeight="150" id="taskListGapTable">
                             <f:facet name="header">
                                 Materials in customer's Stock or Cart purchase history that DO NOT EXIST in the Task Lists
@@ -166,8 +164,6 @@
                             </p:column>
                         </p:dataTable>
 
-
-                        <!--h5>Materials in the Task list that DO NOT EXIST in the customer's Stock or Purchase history:</h5-->
 
                         <p:dataTable var="mtrl" value="#{customerGapViewBean.mtrlList}" resizableColumns="true" scrollable="true" scrollHeight="150" id="customerGapTable">
                             <f:facet name="header">

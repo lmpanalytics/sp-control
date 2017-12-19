@@ -12,18 +12,30 @@ package com.tetrapak.processing.parts_control.pc_models;
  */
 public class LogicParameters {
 
+    private int annualRunningHours;
     private int changeIntervalUL;
     private int changeIntervalLL;
 
     /**
      * Constructor
      *
+     * @param annualRunningHours
      * @param changeIntervalUL upper limit
      * @param changeIntervalLL lower limit
      */
-    public LogicParameters(int changeIntervalUL, int changeIntervalLL) {
+    public LogicParameters(int annualRunningHours, int changeIntervalUL, int changeIntervalLL) {
+        this.annualRunningHours = annualRunningHours;
         this.changeIntervalUL = changeIntervalUL;
         this.changeIntervalLL = changeIntervalLL;
+    }
+
+    // Getters and Setters
+    public int getAnnualRunningHours() {
+        return annualRunningHours;
+    }
+
+    public void setAnnualRunningHours(int annualRunningHours) {
+        this.annualRunningHours = annualRunningHours;
     }
 
     public int getChangeIntervalUL() {

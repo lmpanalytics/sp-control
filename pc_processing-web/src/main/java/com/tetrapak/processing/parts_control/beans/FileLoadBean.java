@@ -7,7 +7,7 @@ package com.tetrapak.processing.parts_control.beans;
 
 import com.tetrapak.processing.parts_control.models.TaskList;
 import com.tetrapak.processing.parts_control.models.Purchases;
-import com.tetrapak.processing.parts_control.models.Inventory;
+import com.tetrapak.processing.parts_control.pc_models.Inventory;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;

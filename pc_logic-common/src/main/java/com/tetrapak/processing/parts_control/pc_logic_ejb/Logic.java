@@ -5,8 +5,10 @@
  */
 package com.tetrapak.processing.parts_control.pc_logic_ejb;
 
+import com.tetrapak.processing.parts_control.pc_models.Inventory;
 import com.tetrapak.processing.parts_control.pc_models.LogicParameters;
 import com.tetrapak.processing.parts_control.pc_models.TaskListMetaData;
+import java.util.Map;
 import javax.ejb.Remote;
 
 /**
@@ -19,6 +21,10 @@ public interface Logic {
 
     public String sayHello();
 
-   public void calculateInventory(TaskListMetaData taskListMetaData, LogicParameters logicParameters);
+    public void calculateInventory(TaskListMetaData taskListMetaData, LogicParameters logicParameters);
+
+    public Map<String, Inventory> getRecommendedMaterialMap();
+
+    public void setRecommendedMaterialMap(Map<String, Inventory> materialMap);
 
 }

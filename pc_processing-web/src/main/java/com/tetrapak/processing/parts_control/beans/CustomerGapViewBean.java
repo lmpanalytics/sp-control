@@ -54,8 +54,9 @@ public class CustomerGapViewBean implements Serializable {
 
     public void processCustomerGap() {
         dataBean.findCustomerGap(customerViewBean.getSelectedIDs());
-// Make a list of Materials
-        mtrlList = new ArrayList<Material>(dataBean.getCustomerGapMaterialMap().values());
+
+        // Make a list of Materials
+        mtrlList = new ArrayList<>(dataBean.getCustomerGapMaterialMap().values());
     }
 
     public List<Material> getMtrlList() {

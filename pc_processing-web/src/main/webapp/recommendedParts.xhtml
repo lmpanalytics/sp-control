@@ -163,8 +163,8 @@
                                 <h:outputText value="#{var.userID}" />
                             </p:column>
                             <f:facet name="footer">
-                                <p:commandButton process="taskListsTable" icon="ui-icon-check" value="CALCULATE PARTS" action="#{materialResultViewBean.showSelectedTaskList()}">
-                                    <!-->Add Ajax to refresh table below??</--> 
+                                <p:commandButton process="taskListsTable" icon="ui-icon-check" value="CALCULATE PARTS" >
+                                    <p:ajax update="dataTables:recommendedPartsTable" listener="#{materialResultViewBean.processRecommendedParts()}"/>
                                 </p:commandButton>
 
                             </f:facet>
@@ -172,35 +172,25 @@
 
                         <p></p> 
 
-                        <ui:remove>
+                        <p:dataTable id="recommendedPartsTable" var="var" value="#{materialResultViewBean.recommendedPartsList}" resizableColumns="true" scrollable="true" scrollHeight="150" >
+                            <f:facet name="header">
+                                RECOMMENDED PARTS
+                            </f:facet>
+                            <p:column headerText="MTRL NUMBER" sortBy="#{var.material}">
+                                <h:outputText value="#{var.material}" />
+                            </p:column>
 
-                            <p:dataTable id="recommendedPartsTable" var="var" value="#{taskListViewBean.taskLists}" resizableColumns="true" scrollable="true" scrollHeight="150" >
-                                <f:facet name="header">
-                                    RECOMMENDED PARTS
-                                </f:facet>
-                                <p:column headerText="ASSORTMENT GROUP" sortBy="#{var.assortmentGroup}">
-                                    <h:outputText value="#{var.assortmentGroup}" />
-                                </p:column>
+                            <p:column headerText="DESCRIPTION" sortBy="#{var.description}">
+                                <h:outputText value="#{var.description}" />
+                            </p:column>
 
-                                <p:column headerText="MPG" sortBy="#{var.mpg}">
-                                    <h:outputText value="#{var.mpg}" />
-                                </p:column>
+                            <p:column headerText="QUANTITY" style="text-align:right" sortBy="#{var.quantity}">
+                                <h:outputText value="#{var.quantity}" >
+                                    <f:converter converterId="javax.faces.Integer" />
+                                </h:outputText>
+                            </p:column>
+                        </p:dataTable>
 
-                                <p:column headerText="MTRL NUMBER" sortBy="#{var.materialNumber}">
-                                    <h:outputText value="#{var.materialNumber}" />
-                                </p:column>
-
-                                <p:column headerText="DESCRIPTION" sortBy="#{var.description}">
-                                    <h:outputText value="#{var.description}" />
-                                </p:column>
-
-                                <p:column headerText="PG" style="text-align:right" sortBy="#{var.pg}">
-                                    <h:outputText value="#{var.pg}" >
-                                        <f:convertNumber currencySymbol="&euro;" type="currency"/>
-                                    </h:outputText>
-                                </p:column>
-                            </p:dataTable>
-                        </ui:remove> 
                     </h:form> 
 
                 </p:layoutUnit>

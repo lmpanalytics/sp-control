@@ -5,6 +5,14 @@
  */
 package com.tetrapak.processing.parts_control.beans;
 
+import com.tetrapak.processing.parts_control.pc_logic_ejb.Logic;
+import com.tetrapak.processing.parts_control.pc_models.Inventory;
+import com.tetrapak.processing.parts_control.pc_models.LogicParameters;
+import com.tetrapak.processing.parts_control.pc_models.TaskListMetaData;
+import java.util.ArrayList;
+import java.util.List;
+import javax.annotation.PostConstruct;
+import javax.ejb.EJB;
 import javax.inject.Named;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
@@ -19,8 +27,16 @@ import javax.inject.Inject;
 @RequestScoped
 public class MaterialResultViewBean {
 
+    @EJB
+    Logic logicBean;
+
     @Inject
     TaskListViewBean taskListViewBean;
+
+    @Inject
+    LogicParametersViewBean logicParametersViewBean;
+
+    private List<Inventory> recommendedPartsList;
 
     /**
      * Creates a new instance of MaterialResultViewBean
@@ -28,8 +44,32 @@ public class MaterialResultViewBean {
     public MaterialResultViewBean() {
     }
 
-    public void showSelectedTaskList() {
-        System.out.println("In selected TaskList(), TaskList: " + taskListViewBean.getSelectedTaskList().toString());
+    @PostConstruct
+    public void init() {
+        // INITIATE CLASS SPECIFIC MAPS AND FIELDS HERE - THE ORDER IS IMPORTANT
+
+        // Initiate Recommended parts list
+        recommendedPartsList = new ArrayList<>();
+    }
+
+    /**
+     * Make a list of Recommended Materials
+     */
+    public void processRecommendedParts() {
+        TaskListMetaData metaData = taskListViewBean.getSelectedTaskList();
+        LogicParameters parameters = logicParametersViewBean.getLogicParameters();
+
+        logicBean.calculateInventory(metaData, parameters);
+
+        recommendedPartsList = new ArrayList<>(logicBean.getRecommendedMaterialMap().values());
+    }
+
+    public List<Inventory> getRecommendedPartsList() {
+        return recommendedPartsList;
+    }
+
+    public void setRecommendedPartsList(List<Inventory> recommendedPartsList) {
+        this.recommendedPartsList = recommendedPartsList;
     }
 
 }

@@ -35,8 +35,8 @@ public class DataBean implements Data, Serializable {
     private String message;
     private static final Logger LOGGER = LoggerFactory.getLogger(DataBean.class);
     private static Session session;
-    private static Map<String, Material> taskListGapMaterialMap;
-    private static Map<String, Material> customerGapMaterialMap;
+    private Map<String, Material> taskListGapMaterialMap;
+    private Map<String, Material> customerGapMaterialMap;
 
     @PostConstruct
     public void init() {
@@ -153,7 +153,7 @@ public class DataBean implements Data, Serializable {
 
     @Override
     public void setTaskListGapMaterialMap(Map<String, Material> taskListGapMaterialMap) {
-        DataBean.taskListGapMaterialMap = taskListGapMaterialMap;
+        this.taskListGapMaterialMap = taskListGapMaterialMap;
     }
 
     @Override
@@ -163,7 +163,7 @@ public class DataBean implements Data, Serializable {
 
     @Override
     public void setCustomerGapMaterialMap(Map<String, Material> materialMap) {
-        DataBean.customerGapMaterialMap = customerGapMaterialMap;
+        this.customerGapMaterialMap = customerGapMaterialMap;
     }
 
 }
