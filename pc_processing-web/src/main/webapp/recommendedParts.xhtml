@@ -192,6 +192,10 @@
                             </p:column>
                         </p:dataTable>
 
+                        <p:commandButton value="Export as csv" ajax="false">
+                            <p:dataExporter type="csv" target="recommendedPartsTable" fileName="recommendedPartsTable"/>
+                        </p:commandButton>
+
                     </h:form> 
 
                 </p:layoutUnit>
