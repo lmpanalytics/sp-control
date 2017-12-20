@@ -14,7 +14,10 @@ import java.util.Map;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Session;
+import org.neo4j.driver.v1.StatementResult;
+import org.neo4j.driver.v1.Values;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,16 +58,41 @@ public class LogicBean implements Logic, Serializable {
     public void calculateInventory(TaskListMetaData taskListMetaData, LogicParameters logicParameters) {
 
         try {
-            // Implement row counter.
+
             int rowCounter = 0;
+            recommendedMaterialMap.clear();
+
+            // Get Task list Meta data
+            String id = taskListMetaData.getId();
+
+            // Get Logic parameters
+            int runHours = logicParameters.getAnnualRunningHours();
 
             // Add bean's logic calculation methods to execute
-            recommendedMaterialMap.put("my_key", new Inventory("my_mtrlNumber", "my_description", 1));
+            String tx = "MATCH (m:PcMaterial)-[r:LISTED_IN ]->(t:TaskList {id:$id}) "
+                    + "WHERE r.changeInterval <= $runHours "
+                    + "RETURN m.materialNumber AS materialNumber, m.description AS description, r.quantity AS quantity";
 
+            StatementResult result = session.run(tx, Values.parameters(
+                    "id", id,
+                    "runHours", runHours
+            ));
+
+            while (result.hasNext()) {
+                rowCounter++;
+                Record next = result.next();
+
+                String materialNumber = next.get("materialNumber").asString();
+                String description = next.get("description").asString();
+                int quantity = next.get("quantity").asInt();
+
+                recommendedMaterialMap.put(materialNumber, new Inventory(materialNumber, description, quantity));
+            }
             LOGGER.info("Calculated {} row(s) of recommended materials to stock.", rowCounter);
 
         } catch (Exception e) {
             LOGGER.error("Could not Calculate Inventory. Error message: {}", e.getMessage());
+            System.out.println("Error" + e);
         }
     }
 

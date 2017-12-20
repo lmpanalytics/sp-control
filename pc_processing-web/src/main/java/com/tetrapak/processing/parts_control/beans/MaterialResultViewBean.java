@@ -9,23 +9,24 @@ import com.tetrapak.processing.parts_control.pc_logic_ejb.Logic;
 import com.tetrapak.processing.parts_control.pc_models.Inventory;
 import com.tetrapak.processing.parts_control.pc_models.LogicParameters;
 import com.tetrapak.processing.parts_control.pc_models.TaskListMetaData;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.inject.Named;
-import javax.enterprise.context.RequestScoped;
+import javax.enterprise.context.SessionScoped;
 import javax.inject.Inject;
 
 /**
  * Manages jsf view of recommended parts calculation results. The bean is
- * request scoped as calculation results are not kept is session.
+ * session scoped to keep calculation results in session.
  *
  * @author SEPALMM
  */
 @Named(value = "materialResultViewBean")
-@RequestScoped
-public class MaterialResultViewBean {
+@SessionScoped
+public class MaterialResultViewBean implements Serializable {
 
     @EJB
     Logic logicBean;
@@ -36,6 +37,7 @@ public class MaterialResultViewBean {
     @Inject
     LogicParametersViewBean logicParametersViewBean;
 
+    private static final long serialVersionUID = 1L;
     private List<Inventory> recommendedPartsList;
 
     /**

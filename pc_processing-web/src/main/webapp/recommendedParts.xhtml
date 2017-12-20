@@ -96,27 +96,32 @@
 
                 <p:layoutUnit position="west" size="225" header="Menu" collapsible="true">
 
-                    <ui:remove>
-                        <h:form>
-                            <p:messages autoUpdate="true" />
 
-                            <h:panelGrid columns="2" style="margin-bottom:10px" cellpadding="5">
+                    <h:form>
+                        <p:messages autoUpdate="true" />
 
+                        <h:panelGrid columns="2" style="margin-bottom:10px" cellpadding="5">
 
-                                <p:selectCheckboxMenu id="console" value="#{customerViewBean.selectedCustomers}" label="Customers"
-                                                      filter="true" filterMatchMode="contains" panelStyle="width:250px">
-                                    <f:selectItems value="#{customerViewBean.customers}" />
-                                </p:selectCheckboxMenu>
-                                <p:commandButton value="Submit" update="displayItems" oncomplete="PF('itemDialog').show()" style="margin-top:5px;" />
+                            <h:outputLabel for="runHrs" value="Run hours: " />
+                            <p:spinner id="runHrs" value="#{logicParametersViewBean.annualRunningHours}" 
+                                       size="5" stepFactor="500" min="0" max="8000" 
+                                       title="Yearly average equipment running hours."/>
 
-                            </h:panelGrid>
+                            <h:outputLabel for="IntervalUL" value="Interval UL: " />
+                            <p:spinner id="IntervalUL" value="#{logicParametersViewBean.changeIntervalUL}" 
+                                       size="5" stepFactor="500" min="0" max="8000" 
+                                       title="Upper limit of change interval parts." disabled="true"/>
 
-                            <p:commandButton value="Calculate" style="margin-top:10px;" >
-                                <p:ajax update=":dataTables" listener="#{customerViewBean.collectSelectedCustomerIds}"/>
-                            </p:commandButton>
+                            <h:outputLabel for="IntervalLL" value="Interval LL: " />
+                            <p:spinner id="IntervalLL" value="#{logicParametersViewBean.changeIntervalLL}" 
+                                       size="5" stepFactor="500" min="0" max="8000" 
+                                       title="Lower limit of change interval parts."/>
 
-                        </h:form>
-                    </ui:remove>
+                        </h:panelGrid>
+
+                        <p:commandButton value="Submit" action="#{logicParametersViewBean.compileParameters}" style="margin-top:5px;" />
+
+                    </h:form>
 
                     <p:button value="HOME" outcome="/index" icon="ui-icon-home"/>   
 
@@ -162,14 +167,10 @@
                             <p:column headerText="USER ID" sortBy="#{var.userID}">
                                 <h:outputText value="#{var.userID}" />
                             </p:column>
-                            <f:facet name="footer">
-                                <p:commandButton process="taskListsTable" icon="ui-icon-check" value="CALCULATE PARTS" >
-                                    <p:ajax update="dataTables:recommendedPartsTable" listener="#{materialResultViewBean.processRecommendedParts()}"/>
-                                </p:commandButton>
-
-                            </f:facet>
                         </p:dataTable>
 
+                        <p></p> 
+                        <p:commandButton update="recommendedPartsTable" icon="ui-icon-check" value="CALCULATE PARTS" action="#{materialResultViewBean.processRecommendedParts()}" />
                         <p></p> 
 
                         <p:dataTable id="recommendedPartsTable" var="var" value="#{materialResultViewBean.recommendedPartsList}" resizableColumns="true" scrollable="true" scrollHeight="150" >

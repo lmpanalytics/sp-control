@@ -39,10 +39,9 @@ public class LogicParametersViewBean implements Serializable {
         annualRunningHours = 0;
         changeIntervalUL = 0;
         changeIntervalLL = 0;
-
     }
 
-    public void compileParameters(int annualRunningHours, int changeIntervalUL, int changeIntervalLL) {
+    public void compileParameters() {
         this.logicParameters = new LogicParameters(annualRunningHours, changeIntervalUL, changeIntervalLL);
     }
 
