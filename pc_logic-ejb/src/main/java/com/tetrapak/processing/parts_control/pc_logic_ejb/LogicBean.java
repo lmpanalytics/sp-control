@@ -92,7 +92,6 @@ public class LogicBean implements Logic, Serializable {
 
         } catch (Exception e) {
             LOGGER.error("Could not Calculate Inventory. Error message: {}", e.getMessage());
-            System.out.println("Error" + e);
         }
     }
 

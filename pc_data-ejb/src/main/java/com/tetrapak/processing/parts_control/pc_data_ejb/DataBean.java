@@ -67,9 +67,9 @@ public class DataBean implements Data, Serializable {
             int gapCounter = 0;
             taskListGapMaterialMap.clear();
             String tx = "MATCH (m:PcMaterial)-[:STOCKED_IN|:PURCHASED_IN]->(n) "
-                    + "WHERE n.id IN {custNumbers}"
+                    + "WHERE n.id IN $custNumbers "
                     + "OPTIONAL MATCH (m)-[r:LISTED_IN]->(t:TaskList) "
-                    + "WHERE t.id IN {custNumbers}"
+                    + "WHERE t.id IN $custNumbers "
                     + "WITH m.materialNumber AS mtrlNo, m, r "
                     + "WHERE r IS NULL "
                     + "WITH DISTINCT mtrlNo, m "
@@ -113,9 +113,9 @@ public class DataBean implements Data, Serializable {
             int gapCounter = 0;
             customerGapMaterialMap.clear();
             String tx = "MATCH (m:PcMaterial)-[:LISTED_IN]->(t:TaskList) "
-                    + "WHERE t.id IN {custNumbers} "
+                    + "WHERE t.id IN $custNumbers "
                     + "OPTIONAL MATCH (m)-[r:STOCKED_IN|:PURCHASED_IN]->(n) "
-                    + "WHERE n.id IN {custNumbers} "
+                    + "WHERE n.id IN $custNumbers "
                     + "WITH m.materialNumber AS mtrlNo, m, r "
                     + "WHERE r IS NULL "
                     + "WITH DISTINCT mtrlNo, m "
