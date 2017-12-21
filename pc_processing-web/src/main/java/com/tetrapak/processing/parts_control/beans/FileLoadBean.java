@@ -52,6 +52,8 @@ import org.slf4j.LoggerFactory;
  * file, and after column 18 in the Task list file. Such user added columns will
  * be ignored during file upload.
  *
+ * The file reader handles blank rows and cells.
+ *
  * @author Magnus Palm
  */
 @Named(value = "fileLoadBean")
@@ -102,13 +104,13 @@ public class FileLoadBean implements Serializable {
             if (null != fileType) {
                 switch (fileType) {
                     case "Inventory":
-                        Map<Long, Inventory> inventoryMap = readInventoryFile();
+                        Map<Integer, Inventory> inventoryMap = readInventoryFile();
                         break;
                     case "Purchases":
-                        Map<Long, Purchases> purchaseMap = readPurchaseFile();
+                        Map<Integer, Purchases> purchaseMap = readPurchaseFile();
                         break;
                     case "Task List":
-                        Map<Long, TaskList> taskListMap = readTaskListFile();
+                        Map<Integer, TaskList> taskListMap = readTaskListFile();
                         addTaskList(taskListMap);
                         break;
                     default:
@@ -125,9 +127,9 @@ public class FileLoadBean implements Serializable {
      * Reads an Excel file, based on Inventory data
      *
      */
-    private Map<Long, Inventory> readInventoryFile() {
-        Map<Long, Inventory> m = new HashMap<>();
-        Long rowCounter = 0L;
+    private Map<Integer, Inventory> readInventoryFile() {
+        Map<Integer, Inventory> m = new HashMap<>();
+        Integer rowCounter = 0;
 
         try {
 
@@ -169,7 +171,7 @@ public class FileLoadBean implements Serializable {
                     }
                 }
                 //   Put to map starting from row two in the Excel sheet
-                if (rowCounter != Long.MAX_VALUE && rowCounter > 1) {
+                if (rowCounter != Integer.MAX_VALUE && rowCounter > 1) {
                     // System.out.printf("Inventory file row: %s\t { %s\t, %s\t, %s }", rowCounter, material, description, quantity);
                     m.put(rowCounter, new Inventory(material, description, quantity));
                 }
@@ -187,9 +189,9 @@ public class FileLoadBean implements Serializable {
      * Reads an Excel file, based on Purchase data
      *
      */
-    private Map<Long, Purchases> readPurchaseFile() {
-        Map<Long, Purchases> m = new HashMap<>();
-        Long rowCounter = 0L;
+    private Map<Integer, Purchases> readPurchaseFile() {
+        Map<Integer, Purchases> m = new HashMap<>();
+        Integer rowCounter = 0;
 
         try {
 
@@ -249,25 +251,23 @@ public class FileLoadBean implements Serializable {
      * Reads an Excel file, based on Task List data from SSPt
      *
      */
-    private Map<Long, TaskList> readTaskListFile() {
-        Map<Long, TaskList> m = new HashMap<>();
-        Long rowCounter = 0L;
+    private Map<Integer, TaskList> readTaskListFile() {
+        Map<Integer, TaskList> m = new HashMap<>();
 
         try {
+            int MY_MINIMUM_COLUMN_COUNT = 17;
 
             Workbook workbook = new XSSFWorkbook(excelFile);
-            Sheet datatypeSheet = workbook.getSheetAt(0);
-            Iterator<Row> rowIterator = datatypeSheet.iterator();
+            Sheet sheet = workbook.getSheetAt(0);
 
-            while (rowIterator.hasNext()) {
+            // Decide which rows to process
+            int rowStart = sheet.getFirstRowNum();
+            int rowEnd = sheet.getLastRowNum();
 
-                rowCounter++;
+            for (int rowNum = rowStart; rowNum <= rowEnd; rowNum++) {
+                Row r = sheet.getRow(rowNum);
 
-//                Initiate at each new row
-                Row currentRow = rowIterator.next();
-                Iterator<Cell> cellIterator = currentRow.iterator();
-                int cellCounter = 0;
-
+                // Initiate at each new row 
                 int machineNumber = 0;
                 String label = "";
                 String classItem = "";
@@ -283,57 +283,105 @@ public class FileLoadBean implements Serializable {
                 int qty = 0;
                 String functionalArea = "";
 
-                while (cellIterator.hasNext()) {
+                if (r == null) {
+                    // This whole row is empty
+                    // Handle it as needed
+                    continue;
+                }
 
-                    cellCounter++;
+                int lastColumn = Math.max(r.getLastCellNum(), MY_MINIMUM_COLUMN_COUNT);
 
-                    Cell currentCell = cellIterator.next();
+                for (int cn = 0; cn <= lastColumn; cn++) {
+                    Cell c = r.getCell(cn, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
+                    if (c == null) {
+                        // The spreadsheet is empty in this cell
+                    } else {
+                        // Do something useful with the cell's contents
 
-                    if (currentCell.getCellTypeEnum() == CellType.STRING) {
-                        String s = currentCell.getStringCellValue();
+                        if (c.getCellTypeEnum() == CellType.STRING) {
+                            String s = c.getStringCellValue();
 //                        System.out.print(s + " I'm a String ");
-                        if (cellCounter == 2) {
-                            label = s;
-                        } else if (cellCounter == 3) {
-                            classItem = s;
-                        } else if (cellCounter == 4) {
-                            articleNo = s;
-                        } else if (cellCounter == 5) {
-                            eqDenomination = s;
-                        } else if (cellCounter == 6) {
-                            type = s;
-                        } else if (cellCounter == 7) {
-                            docNo = s;
-                        } else if (cellCounter == 10) {
-                            action = s;
-                        } else if (cellCounter == 11) {
-                            description = s;
-                        } else if (cellCounter == 12) {
-                            sparePartNo = s;
-                        } else if (cellCounter == 13) {
-                            spDenomination = s;
-                        } else if (cellCounter == 18) {
-                            functionalArea = s;
-                        }
+                            switch (cn) {
+                                case 1:
+                                    label = s;
+                                    break;
+                                case 2:
+                                    classItem = s;
+                                    break;
+                                case 3:
+                                    articleNo = s;
+                                    break;
+                                case 4:
+                                    eqDenomination = s;
+                                    break;
+                                case 5:
+                                    type = s;
+                                    break;
+                                case 6:
+                                    docNo = s;
+                                    break;
+                                case 9:
+                                    action = s;
+                                    break;
+                                case 10:
+                                    description = s;
+                                    break;
+                                case 11:
+                                    sparePartNo = s;
+                                    break;
+                                case 12:
+                                    spDenomination = s;
+                                    break;
+                                case 17:
+                                    functionalArea = s;
+                                    break;
+                                default:
+                                    break;
+                            }
 
-                    } else if (currentCell.getCellTypeEnum() == CellType.NUMERIC) {
-                        Double d = currentCell.getNumericCellValue();
-//                        System.out.print(d + " I'm a number ");                       
-                        if (cellCounter == 1) {
-                            machineNumber = d.intValue();
-                        } else if (cellCounter == 9) {
-                            interval = d.intValue();
-                        } else if (cellCounter == 14) {
-                            qty = d.intValue();
+                        } else if (c.getCellTypeEnum() == CellType.NUMERIC) {
+                            Double d = c.getNumericCellValue();
+//                        System.out.print(d + " I'm a number ");
+                            switch (cn) {
+                                case 0:
+                                    machineNumber = d.intValue();
+                                    break;
+                                case 1:
+                                    label = String.valueOf(d.intValue());
+                                    break;
+                                case 2:
+                                    classItem = String.valueOf(d.intValue());
+                                    break;
+                                case 3:
+                                    articleNo = String.valueOf(d.intValue());
+                                    break;
+                                case 6:
+                                    docNo = String.valueOf(d.intValue());
+                                    break;
+                                case 8:
+                                    interval = d.intValue();
+                                    break;
+                                case 11:
+                                    sparePartNo = String.valueOf(d.intValue());
+                                    break;
+                                case 13:
+                                    qty = d.intValue();
+                                    break;
+                                default:
+                                    break;
+                            }
+
                         }
 
                     }
                 }
-                //   Put to map starting from row two in the Excel sheet
-                if (rowCounter != Long.MAX_VALUE && rowCounter > 1) {
-//                    System.out.printf("Task List file row: %s\t { %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s }", rowCounter, machineNumber, label, classItem, articleNo, eqDenomination, type, docNo, interval, action, description, sparePartNo, spDenomination, qty, functionalArea);
-                    m.put(rowCounter, new TaskList(machineNumber, label, classItem, articleNo, eqDenomination, type, docNo, interval, action, description, sparePartNo, spDenomination, qty, functionalArea));
+
+                //   Put to map starting from row 2 in the Excel sheet (idx 1)
+                if (rowNum != Integer.MAX_VALUE && rowNum >= 1) {
+//                    System.out.printf("Task List file row: %s\t { %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s }", rowNum, machineNumber, label, classItem, articleNo, eqDenomination, type, docNo, interval, action, description, sparePartNo, spDenomination, qty, functionalArea);
+                    m.put(rowNum, new TaskList(machineNumber, label, classItem, articleNo, eqDenomination, type, docNo, interval, action, description, sparePartNo, spDenomination, qty, functionalArea));
                 }
+
             }
 
         } catch (FileNotFoundException e) {
@@ -347,7 +395,7 @@ public class FileLoadBean implements Serializable {
     /**
      * Adds task list data to the data base
      */
-    private void addTaskList(Map<Long, TaskList> taskListMap) {
+    private void addTaskList(Map<Integer, TaskList> taskListMap) {
         // Sessions are lightweight and disposable connection wrappers.
         try (Session session = neo.getDRIVER().session()) {
 
