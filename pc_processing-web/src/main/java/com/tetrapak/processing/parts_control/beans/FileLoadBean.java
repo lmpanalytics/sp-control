@@ -8,11 +8,13 @@ package com.tetrapak.processing.parts_control.beans;
 import com.tetrapak.processing.parts_control.models.TaskList;
 import com.tetrapak.processing.parts_control.models.Purchases;
 import com.tetrapak.processing.parts_control.pc_models.Inventory;
+import com.tetrapak.processing.parts_control.pc_neo4j_service_ejb.Neo4jService;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import javax.inject.Named;
 import java.io.Serializable;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -28,6 +30,10 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.neo4j.driver.v1.Session;
+import org.neo4j.driver.v1.Transaction;
+import static org.neo4j.driver.v1.Values.parameters;
+import org.neo4j.driver.v1.exceptions.ClientException;
 import org.primefaces.event.FileUploadEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,8 +61,14 @@ public class FileLoadBean implements Serializable {
     @Inject
     private FileTypeBean ftb;
 
+    @Inject
+    private Neo4jService neo;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(FileLoadBean.class);
     private static FileInputStream excelFile;
+    private int relationShipCounter;
+    private boolean taskListExceptionFlag1;
+    private boolean taskListExceptionFlag2;
 
     /**
      * Creates a new instance of FileLoadBean
@@ -97,17 +109,15 @@ public class FileLoadBean implements Serializable {
                         break;
                     case "Task List":
                         Map<Long, TaskList> taskListMap = readTaskListFile();
+                        addTaskList(taskListMap);
                         break;
                     default:
                         break;
                 }
             }
-//        Write data patterns to the data base
-            /* addPattern(patternMap);
-            LOGGER.info("Data written to DB.");*/
 
         } catch (IOException ex) {
-            LOGGER.error("Exception in handleFileUpload method {}", ex);
+            LOGGER.error("Exception in handleFileUpload method {}", ex.getMessage());
         }
     }
 
@@ -166,7 +176,9 @@ public class FileLoadBean implements Serializable {
             }
 
         } catch (FileNotFoundException e) {
+            LOGGER.error("Exception file not found {}", e.getMessage());
         } catch (IOException e) {
+            LOGGER.error("Exception in IO {}", e.getMessage());
         }
         return m;
     }
@@ -226,13 +238,15 @@ public class FileLoadBean implements Serializable {
             }
 
         } catch (FileNotFoundException e) {
+            LOGGER.error("Exception file not found {}", e.getMessage());
         } catch (IOException e) {
+            LOGGER.error("Exception in IO {}", e.getMessage());
         }
         return m;
     }
 
     /**
-     * Reads an Excel file, based on Task List data
+     * Reads an Excel file, based on Task List data from SSPt
      *
      */
     private Map<Long, TaskList> readTaskListFile() {
@@ -261,6 +275,8 @@ public class FileLoadBean implements Serializable {
                 String eqDenomination = "";
                 String type = "";
                 String docNo = "";
+                int interval = 0;
+                String action = "";
                 String description = "";
                 String sparePartNo = "";
                 String spDenomination = "";
@@ -288,6 +304,8 @@ public class FileLoadBean implements Serializable {
                             type = s;
                         } else if (cellCounter == 7) {
                             docNo = s;
+                        } else if (cellCounter == 10) {
+                            action = s;
                         } else if (cellCounter == 11) {
                             description = s;
                         } else if (cellCounter == 12) {
@@ -303,58 +321,135 @@ public class FileLoadBean implements Serializable {
 //                        System.out.print(d + " I'm a number ");                       
                         if (cellCounter == 1) {
                             machineNumber = d.intValue();
-
+                        } else if (cellCounter == 9) {
+                            interval = d.intValue();
                         } else if (cellCounter == 14) {
                             qty = d.intValue();
-
                         }
 
                     }
                 }
                 //   Put to map starting from row two in the Excel sheet
                 if (rowCounter != Long.MAX_VALUE && rowCounter > 1) {
-                    // System.out.printf("Task List file row: %s\t { %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s }", rowCounter, machineNumber, label, classItem, articleNo, eqDenomination, type, docNo, description, sparePartNo, spDenomination, qty, functionalArea);
-                    m.put(rowCounter, new TaskList(machineNumber, label, classItem, articleNo, eqDenomination, type, docNo, description, sparePartNo, spDenomination, qty, functionalArea));
+//                    System.out.printf("Task List file row: %s\t { %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s }", rowCounter, machineNumber, label, classItem, articleNo, eqDenomination, type, docNo, interval, action, description, sparePartNo, spDenomination, qty, functionalArea);
+                    m.put(rowCounter, new TaskList(machineNumber, label, classItem, articleNo, eqDenomination, type, docNo, interval, action, description, sparePartNo, spDenomination, qty, functionalArea));
                 }
             }
 
         } catch (FileNotFoundException e) {
+            LOGGER.error("Exception file not found {}", e.getMessage());
         } catch (IOException e) {
+            LOGGER.error("Exception in IO {}", e.getMessage());
         }
         return m;
     }
 
     /**
-     * Adds data patterns to the data base
-     *
-     * @param pattern
+     * Adds task list data to the data base
      */
-    /* private void addPattern(Map<Long, Pattern> pattern) {
+    private void addTaskList(Map<Long, TaskList> taskListMap) {
         // Sessions are lightweight and disposable connection wrappers.
         try (Session session = neo.getDRIVER().session()) {
+
+            // Exception flags
+            taskListExceptionFlag1 = true;
+            taskListExceptionFlag2 = true;
+
+            String prefix = "PC_";
+            // user input
+            String customerNumber = prefix + "100";
+            String description = "project2";
+            String version = "2";
+
+            // System input
+            LocalDate today = LocalDate.now();
+            int year = today.getYear();
+            int month = today.getMonthValue();
+            int day = today.getDayOfMonth();
+
+            String userId = "SEPALMM";
+
             // Wrapping Cypher in an explicit transaction provides atomicity
             // and makes handling errors much easier.
+            // 1. Create TaskList node:
             try (Transaction tx = session.beginTransaction()) {
-                pattern.values().stream().forEach((v) -> {
-                    Double respVar0 = v.getResponeVar0();
-                    Long ms = v.getMsTime();
-                    tx.run("MATCH (c:Customer { customerNumber: {custNo} })"
-                            + "MERGE (p:Pattern {msEpoch: {t}, respVar0: {rv0}}) "
-                            + "MERGE (p)-[:OWNED_BY]->(c)",
-                            parameters("t", ms,
-                                    "rv0", respVar0,
-                                    "custNo", user.getCustomerNumber()));
-                    tx.success();  // Mark this write as successful.
-                });
+
+                tx.run("MERGE (t:TaskList{ id: $id, version: $version, userId: $userId, description: $description }) "
+                        + "SET t.year = $year "
+                        + "SET t.month = $month "
+                        + "SET t.day = $day "
+                        + "WITH t "
+                        + "MATCH (c:PcCustomer) WHERE c.id = $id "
+                        + "MERGE (c)-[:PLANNING]->(t);",
+                        parameters("id", customerNumber,
+                                "description", description,
+                                "version", version,
+                                "year", year,
+                                "month", month,
+                                "day", day,
+                                "userId", userId));
+                tx.success();  // Mark this write as successful.
+                taskListExceptionFlag1 = false;
+
+            } catch (ClientException ce) {
+                taskListExceptionFlag1 = true;
+                LOGGER.error("Exception in creating TaskList node: {}", ce.getMessage());
             }
+
+            // 2. Create Material to TaskList relationships:
+            try (Transaction tx = session.beginTransaction()) {
+                relationShipCounter = 0;
+
+                taskListMap.values().stream().forEach((v) -> {
+                    String materialNumber = v.getSparePartNo();
+                    int quantity = v.getQty();
+                    String functionalArea = v.getFunctionalArea();
+                    int machineNumberSSPt = v.getMachineNumber();
+                    int actionInterval = v.getInterval();
+                    String action = v.getAction();
+                    tx.run("MATCH (m:PcMaterial) WHERE m.materialNumber = $materialNumber_id "
+                            + "MATCH (t:TaskList) WHERE t.id = $id "
+                            + "MERGE (m)-[r:LISTED_IN]->(t) "
+                            + "SET r.quantity = $qty "
+                            + "SET r.functionalArea = $functionalArea "
+                            + "SET r.machineNumberSSPt = $machineNumberSSPt "
+                            + "SET r.actionInterval = $actionInterval "
+                            + "SET r.action = $action;",
+                            parameters("id", customerNumber,
+                                    "materialNumber_id", materialNumber,
+                                    "qty", quantity,
+                                    "functionalArea", functionalArea,
+                                    "machineNumberSSPt", machineNumberSSPt,
+                                    "actionInterval", actionInterval,
+                                    "action", action));
+                    tx.success();  // Mark this write as successful.
+                    relationShipCounter++;
+                    taskListExceptionFlag2 = false;
+                });
+
+            } catch (ClientException ce) {
+                taskListExceptionFlag2 = true;
+                LOGGER.error("Exception in Material to TaskList relationships: {}", ce.getMessage());
+            }
+
+            if (!taskListExceptionFlag1) {
+                LOGGER.info("Succesfully created TaskList node {}." /*, compositeKey */);
+            }
+            if (!taskListExceptionFlag2) {
+                LOGGER.info("Succesfully created {} Material to TaskList relationship(s).", relationShipCounter);
+            }
+
+        } catch (Exception e) {
+            LOGGER.error("Exception in adding TaskList: {}", e.getMessage());
         }
-    }*/
+    }
+
     @PreDestroy
     void destroyMe() {
         try {
             excelFile.close();
         } catch (IOException ex) {
-            LOGGER.error("Exception in closing excelFile reader {}", ex);
+            LOGGER.error("Exception in closing excelFile reader {}", ex.getMessage());
         }
     }
 }

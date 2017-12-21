@@ -19,13 +19,15 @@ public class TaskList {
     private String eqDenomination;
     private String type;
     private String docNo;
+    private int interval;
+    private String action;
     private String description;
     private String sparePartNo;
     private String spDenomination;
     private int qty;
     private String functionalArea;
 
-    public TaskList(int machineNumber, String label, String classItem, String articleNo, String eqDenomination, String type, String docNo, String description, String sparePartNo, String spDenomination, int qty, String functionalArea) {
+    public TaskList(int machineNumber, String label, String classItem, String articleNo, String eqDenomination, String type, String docNo, int interval, String action, String description, String sparePartNo, String spDenomination, int qty, String functionalArea) {
         this.machineNumber = machineNumber;
         this.label = label;
         this.classItem = classItem;
@@ -33,6 +35,8 @@ public class TaskList {
         this.eqDenomination = eqDenomination;
         this.type = type;
         this.docNo = docNo;
+        this.interval = interval;
+        this.action = action;
         this.description = description;
         this.sparePartNo = sparePartNo;
         this.spDenomination = spDenomination;
@@ -66,6 +70,14 @@ public class TaskList {
 
     public String getDocNo() {
         return docNo;
+    }
+
+    public int getInterval() {
+        return interval;
+    }
+
+    public String getAction() {
+        return action;
     }
 
     public String getDescription() {
