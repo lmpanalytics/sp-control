@@ -96,7 +96,7 @@ public class FileLoadBean implements Serializable {
             FacesContext.getCurrentInstance().addMessage(null, message);
 
 //            Access the uploaded file from memory
-            this.excelFile = (FileInputStream) event.getFile().getInputstream();
+            excelFile = (FileInputStream) event.getFile().getInputstream();
 
 //        Convert the file to Excel format and populate maps
             String fileType = ftb.getFileType();
@@ -299,7 +299,9 @@ public class FileLoadBean implements Serializable {
                         // Do something useful with the cell's contents
 
                         if (c.getCellTypeEnum() == CellType.STRING) {
-                            String s = c.getStringCellValue();
+                            // Extract the String value
+                            // Remove any hidden carriage returns in cell contents
+                            String s = c.getStringCellValue().replaceAll("[\n\r]", "");
 //                        System.out.print(s + " I'm a String ");
                             switch (cn) {
                                 case 1:
@@ -347,22 +349,22 @@ public class FileLoadBean implements Serializable {
                                     machineNumber = d.intValue();
                                     break;
                                 case 1:
-                                    label = String.valueOf(d.intValue());
+                                    label = String.valueOf(d.intValue()).replaceAll("[\n\r]", "");
                                     break;
                                 case 2:
-                                    classItem = String.valueOf(d.intValue());
+                                    classItem = String.valueOf(d.intValue()).replaceAll("[\n\r]", "");
                                     break;
                                 case 3:
-                                    articleNo = String.valueOf(d.intValue());
+                                    articleNo = String.valueOf(d.intValue()).replaceAll("[\n\r]", "");
                                     break;
                                 case 6:
-                                    docNo = String.valueOf(d.intValue());
+                                    docNo = String.valueOf(d.intValue()).replaceAll("[\n\r]", "");
                                     break;
                                 case 8:
                                     interval = d.intValue();
                                     break;
                                 case 11:
-                                    sparePartNo = String.valueOf(d.intValue());
+                                    sparePartNo = String.valueOf(d.intValue()).replaceAll("[\n\r]", "");
                                     break;
                                 case 13:
                                     qty = d.intValue();
