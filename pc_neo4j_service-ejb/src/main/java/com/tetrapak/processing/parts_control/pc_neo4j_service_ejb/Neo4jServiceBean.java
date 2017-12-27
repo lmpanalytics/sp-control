@@ -26,10 +26,9 @@ public class Neo4jServiceBean implements Neo4jService {
     private static final String USER = "neo4j";
     private static final String PASSWORD = "Tokyo2000";
 
-    private final Driver DRIVER;
+    private Driver DRIVER;
 
     public Neo4jServiceBean() {
-        this.DRIVER = GraphDatabase.driver(URI, AuthTokens.basic(USER, PASSWORD));
     }
 
     @PreDestroy
@@ -46,19 +45,19 @@ public class Neo4jServiceBean implements Neo4jService {
      */
     @Override
     public Driver getDRIVER() {
+        DRIVER = GraphDatabase.driver(URI, AuthTokens.basic(USER, PASSWORD));
         LOGGER.info("Aquire Neo4jDriver.");
         return DRIVER;
     }
 
     /**
      * Close the DB driver
+     *
+     * @throws Exception
      */
     @Override
-    public void closeNeo4jDriver() {
+    public void close() {
         DRIVER.close();
         LOGGER.info("Closed Neo4jDriver.");
     }
-
-    // Add business logic below. (Right-click in editor and choose
-    // "Insert Code > Add Business Method")
 }

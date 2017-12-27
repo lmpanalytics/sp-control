@@ -14,11 +14,12 @@ import org.neo4j.driver.v1.Driver;
  * @author SEPALMM
  */
 @Local
-public interface Neo4jService {
+public interface Neo4jService extends AutoCloseable {
 
     public Driver getDRIVER();
 
-    public void closeNeo4jDriver();
+    @Override
+    public void close() throws Exception;
 
     public void destroyMe();
 

@@ -19,7 +19,7 @@ import javax.ejb.Remote;
 @Remote
 public interface Logic {
 
-    public String sayHello();
+    public String getMessage();
 
     public void calculateInventory(TaskListMetaData taskListMetaData, LogicParameters logicParameters);
 

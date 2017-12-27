@@ -4,7 +4,8 @@
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:f="http://java.sun.com/jsf/core"
       xmlns:ui="http://java.sun.com/jsf/facelets"
-      xmlns:p="http://primefaces.org/ui">
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:fn="http://java.sun.com/jsp/jstl/functions">
 
     <f:view contentType="text/html">
 
@@ -91,7 +92,10 @@
                 </p:layoutUnit>
 
                 <p:layoutUnit position="south" size="75" closable="true" collapsible="true">
-                    Footer
+                    <h:form id="footerForm">                    
+                        <h:outputText id="logOutput" value="#{fn:replace(logicClient.footerMessage,'\\n','&lt;br/&gt;')}" escape="false" />
+                    </h:form>
+
                 </p:layoutUnit>
 
                 <p:layoutUnit position="west" size="225" header="Menu" collapsible="true">
@@ -170,7 +174,7 @@
                         </p:dataTable>
 
                         <p></p> 
-                        <p:commandButton update="recommendedPartsTable" icon="ui-icon-check" value="CALCULATE PARTS" action="#{materialResultViewBean.processRecommendedParts()}" />
+                        <p:commandButton update="recommendedPartsTable footerForm:logOutput" icon="ui-icon-check" value="CALCULATE PARTS" action="#{materialResultViewBean.processRecommendedParts()}" />
                         <p></p> 
 
                         <p:dataTable id="recommendedPartsTable" var="var" value="#{materialResultViewBean.recommendedPartsList}" resizableColumns="true" scrollable="true" scrollHeight="150" >

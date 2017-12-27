@@ -24,7 +24,7 @@ public class LogicClient {
     private Logic logicBean;
 
     // Properties to be returned to the jsf page
-    private String myLogic;
+    private String footerMessage;
 
     // Constructor
     public LogicClient() {
@@ -33,22 +33,15 @@ public class LogicClient {
     // Initialize properties and methods (sequencial order is important)
     @PostConstruct
     public void init() {
-        System.out.println("I'm in the LogicClient init()...");
-        myLogic = "";
-        callLogic();
     }
 
-    public void callLogic() {
-        System.out.println("I'm in callLogic() method ...");
-        myLogic = logicBean.sayHello();
+    public String getFooterMessage() {
+        footerMessage = logicBean.getMessage();
+        return footerMessage;
     }
 
-    public String getMyLogic() {
-        return myLogic;
-    }
-
-    public void setMyLogic(String myLogic) {
-        this.myLogic = myLogic;
+    public void setFooterMessage(String footerMessage) {
+        this.footerMessage = footerMessage;
     }
 
 }
