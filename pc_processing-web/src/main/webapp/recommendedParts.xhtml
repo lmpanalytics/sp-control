@@ -109,16 +109,16 @@
                             <h:outputLabel for="runHrs" value="Run hours: " />
                             <p:spinner id="runHrs" value="#{logicParametersViewBean.annualRunningHours}" 
                                        size="5" stepFactor="500" min="0" max="8000" 
-                                       title="Yearly average equipment running hours."/>
+                                       title="Yearly average equipment running hours." disabled="true"/>
 
                             <h:outputLabel for="IntervalUL" value="Interval UL: " />
                             <p:spinner id="IntervalUL" value="#{logicParametersViewBean.changeIntervalUL}" 
-                                       size="5" stepFactor="500" min="0" max="8000" 
-                                       title="Upper limit of change interval parts." disabled="true"/>
+                                       size="5" stepFactor="500" min="0" max="60000" 
+                                       title="Upper limit of change interval parts." />
 
                             <h:outputLabel for="IntervalLL" value="Interval LL: " />
                             <p:spinner id="IntervalLL" value="#{logicParametersViewBean.changeIntervalLL}" 
-                                       size="5" stepFactor="500" min="0" max="8000" 
+                                       size="5" stepFactor="500" min="0" max="60000" 
                                        title="Lower limit of change interval parts."/>
 
                         </h:panelGrid>
