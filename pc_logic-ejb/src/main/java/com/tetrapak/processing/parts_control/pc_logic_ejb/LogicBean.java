@@ -112,7 +112,7 @@ public class LogicBean implements Logic, Serializable {
             StatementResult result = tx.run(
                     "MATCH (m:PcMaterial)-[r:LISTED_IN ]->(t:TaskList {id:$id}) "
                     + "WHERE r.actionInterval >= $intervalLL AND r.actionInterval <= $intervalUL "
-                    + "RETURN m.materialNumber AS materialNumber, m.description AS description, r.quantity AS quantity;",
+                    + "RETURN m.materialNumber AS materialNumber, m.description AS description, SUM(r.quantity) AS quantity;",
                     Values.parameters(
                             "id", id,
                             "intervalLL", intervalLL,
