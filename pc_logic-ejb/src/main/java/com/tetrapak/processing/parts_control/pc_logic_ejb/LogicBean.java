@@ -107,11 +107,11 @@ public class LogicBean implements Logic, Serializable {
             String id = taskListMetaData.getId();
 
             // Get Logic parameters
-            int intervalLL = logicParameters.getChangeIntervalLL();
-            int intervalUL = logicParameters.getChangeIntervalUL();
+            int intervalLL = logicParameters.getactionIntervalLL();
+            int intervalUL = logicParameters.getactionIntervalUL();
             StatementResult result = tx.run(
                     "MATCH (m:PcMaterial)-[r:LISTED_IN ]->(t:TaskList {id:$id}) "
-                    + "WHERE r.changeInterval >= $intervalLL AND r.changeInterval <= $intervalUL "
+                    + "WHERE r.actionInterval >= $intervalLL AND r.actionInterval <= $intervalUL "
                     + "RETURN m.materialNumber AS materialNumber, m.description AS description, r.quantity AS quantity;",
                     Values.parameters(
                             "id", id,

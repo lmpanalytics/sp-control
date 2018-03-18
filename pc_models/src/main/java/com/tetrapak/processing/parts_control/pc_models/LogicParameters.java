@@ -13,20 +13,20 @@ package com.tetrapak.processing.parts_control.pc_models;
 public class LogicParameters {
 
     private int annualRunningHours;
-    private int changeIntervalUL;
-    private int changeIntervalLL;
+    private int actionIntervalUL;
+    private int actionIntervalLL;
 
     /**
      * Constructor
      *
      * @param annualRunningHours
-     * @param changeIntervalUL upper limit
-     * @param changeIntervalLL lower limit
+     * @param actionIntervalUL upper limit
+     * @param actionIntervalLL lower limit
      */
-    public LogicParameters(int annualRunningHours, int changeIntervalUL, int changeIntervalLL) {
+    public LogicParameters(int annualRunningHours, int actionIntervalUL, int actionIntervalLL) {
         this.annualRunningHours = annualRunningHours;
-        this.changeIntervalUL = changeIntervalUL;
-        this.changeIntervalLL = changeIntervalLL;
+        this.actionIntervalUL = actionIntervalUL;
+        this.actionIntervalLL = actionIntervalLL;
     }
 
     // Getters and Setters
@@ -38,20 +38,20 @@ public class LogicParameters {
         this.annualRunningHours = annualRunningHours;
     }
 
-    public int getChangeIntervalUL() {
-        return changeIntervalUL;
+    public int getactionIntervalUL() {
+        return actionIntervalUL;
     }
 
-    public void setChangeIntervalUL(int changeIntervalUL) {
-        this.changeIntervalUL = changeIntervalUL;
+    public void setactionIntervalUL(int actionIntervalUL) {
+        this.actionIntervalUL = actionIntervalUL;
     }
 
-    public int getChangeIntervalLL() {
-        return changeIntervalLL;
+    public int getactionIntervalLL() {
+        return actionIntervalLL;
     }
 
-    public void setChangeIntervalLL(int changeIntervalLL) {
-        this.changeIntervalLL = changeIntervalLL;
+    public void setactionIntervalLL(int actionIntervalLL) {
+        this.actionIntervalLL = actionIntervalLL;
     }
 
 }

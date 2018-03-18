@@ -22,8 +22,8 @@ public class LogicParametersViewBean implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private int annualRunningHours;
-    private int changeIntervalUL;
-    private int changeIntervalLL;
+    private int actionIntervalUL;
+    private int actionIntervalLL;
 
     private LogicParameters logicParameters;
 
@@ -37,12 +37,12 @@ public class LogicParametersViewBean implements Serializable {
     public void init() {
         // INITIATE CLASS SPECIFIC MAPS AND FIELDS HERE - THE ORDER IS IMPORTANT
         annualRunningHours = 0;
-        changeIntervalUL = 0;
-        changeIntervalLL = 0;
+        actionIntervalUL = 0;
+        actionIntervalLL = 0;
     }
 
     public void compileParameters() {
-        this.logicParameters = new LogicParameters(annualRunningHours, changeIntervalUL, changeIntervalLL);
+        this.logicParameters = new LogicParameters(annualRunningHours, actionIntervalUL, actionIntervalLL);
     }
 
     public int getAnnualRunningHours() {
@@ -53,20 +53,20 @@ public class LogicParametersViewBean implements Serializable {
         this.annualRunningHours = annualRunningHours;
     }
 
-    public int getChangeIntervalUL() {
-        return changeIntervalUL;
+    public int getactionIntervalUL() {
+        return actionIntervalUL;
     }
 
-    public void setChangeIntervalUL(int changeIntervalUL) {
-        this.changeIntervalUL = changeIntervalUL;
+    public void setactionIntervalUL(int actionIntervalUL) {
+        this.actionIntervalUL = actionIntervalUL;
     }
 
-    public int getChangeIntervalLL() {
-        return changeIntervalLL;
+    public int getactionIntervalLL() {
+        return actionIntervalLL;
     }
 
-    public void setChangeIntervalLL(int changeIntervalLL) {
-        this.changeIntervalLL = changeIntervalLL;
+    public void setactionIntervalLL(int actionIntervalLL) {
+        this.actionIntervalLL = actionIntervalLL;
     }
 
     public LogicParameters getLogicParameters() {
