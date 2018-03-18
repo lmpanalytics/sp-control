@@ -457,7 +457,10 @@ public class FileLoadBean implements Serializable {
                     int machineNumberSSPt = v.getMachineNumber();
                     int actionInterval = v.getInterval();
                     String action = v.getAction();
-                    tx.run("MATCH (m:PcMaterial) WHERE m.materialNumber = $materialNumber_id "
+                    tx.run("MATCH (m:PcMaterial) "
+                            + "WHERE m.materialNumber = $materialNumber_id  OR "
+                            + "m.materialNumberNUM = $materialNumber_id OR "
+                            + "m.materialNumberTP = $materialNumber_id "
                             + "MATCH (t:TaskList) WHERE t.id = $id "
                             + "CREATE (m)-[r:LISTED_IN]->(t) "
                             + "SET r.quantity = $qty "

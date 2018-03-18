@@ -64,8 +64,9 @@ public class LogicBean implements Logic, Serializable {
     /**
      * WIP: NOT FULLY IMPLEMENTED YET
      *
-     * Calculate recommended critical part to stock based on the average annual
-     * running hours.
+     * Calculate recommended critical part to stock based on the range of
+     * service interval hours. Material numbers are given in BW format (if
+     * originating) from the GPL.
      *
      * @param taskListMetaData meta data from task lists e.g, Description,
      * UserID.

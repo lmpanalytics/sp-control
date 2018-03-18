@@ -56,7 +56,8 @@ public class DataBean implements Data, Serializable {
 
     /**
      * Find materials in customer's Stock or Cart purchase history that do not
-     * exist in the TaskList.
+     * exist in the TaskList. Material numbers are given in BW format (if
+     * originating) from the GPL.
      *
      * @param customerNumbers
      */
@@ -101,8 +102,9 @@ public class DataBean implements Data, Serializable {
     }
 
     /**
-     * "Find materials in the TaskList that do not exist in the customer's Stock
-     * or Cart purchase history"
+     * Find materials in the TaskList that do not exist in the customer's Stock
+     * or Cart purchase history. Material numbers are given in BW format (if
+     * originating) from the GPL.
      *
      * @param customerNumbers
      */
