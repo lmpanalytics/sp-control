@@ -459,7 +459,7 @@ public class FileLoadBean implements Serializable {
                     String action = v.getAction();
                     tx.run("MATCH (m:PcMaterial) WHERE m.materialNumber = $materialNumber_id "
                             + "MATCH (t:TaskList) WHERE t.id = $id "
-                            + "MERGE (m)-[r:LISTED_IN]->(t) "
+                            + "CREATE (m)-[r:LISTED_IN]->(t) "
                             + "SET r.quantity = $qty "
                             + "SET r.functionalArea = $functionalArea "
                             + "SET r.machineNumberSSPt = $machineNumberSSPt "
