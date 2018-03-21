@@ -394,51 +394,7 @@ public class FileLoadBean implements Serializable {
 
                 //   Put to map starting from row 2 in the Excel sheet (idx 1)
                 if (rowNum != Integer.MAX_VALUE && rowNum >= 1) {
-                    // Convert task list sparePartNo to BW format
-                    // Handle NPE
-
-                    if (!globalPartNumberMap.isEmpty()) {
-                        // If  sparePartNo is not in BW format convert, else skip
-
-                        if (!globalPartNumberMap.containsKey(sparePartNo)) {
-                            // if sparePartNo match TP format or Numeric convert
-                            // to BW format, else remove all non-digits and
-                            // compare with map value numeric, else use 
-                            // sparePartNo as is (is excluded from rec. list)
-//                            System.out.printf("SparePartNo %s not in TS60, now processing%n", sparePartNo);
-
-                            foundIt = false;
-                            PartNumbers pn1 = globalPartNumberMap.values().stream()
-                                    .filter(v -> v.getMaterialNumberTP().equals(sparePartNo)
-                                    || v.getMaterialNumberNUM().equals(sparePartNo)
-                                    ).findFirst().
-                                    orElse(new PartNumbers("NA", "NA", "NA"));
-
-                            if (!pn1.getMaterialNumberBW().equals("NA")) {
-//                                System.out.printf("Converting '%s' to '%s'%n", sparePartNo, pn1.getMaterialNumberBW());
-                                sparePartNo = pn1.getMaterialNumberBW();
-                                foundIt = true;
-                            } else if (!sparePartNo.equals("")) {
-                                String nonDigitPN = removeNonDigits(sparePartNo);
-                                PartNumbers pn2 = globalPartNumberMap.values().stream()
-                                        .filter(v -> v.getMaterialNumberNUM().equals(nonDigitPN)
-                                        || removeNonDigits(v.getMaterialNumberBW()).equals(nonDigitPN)
-                                        || removeNonDigits(v.getMaterialNumberTP()).equals(nonDigitPN)
-                                        ).findFirst().
-                                        orElse(new PartNumbers("NA", "NA", "NA"));
-
-                                if (!pn2.getMaterialNumberBW().equals("NA")) {
-//                                    System.out.printf("After removeNonDigits converting '%s' to '%s'%n", sparePartNo, pn2.getMaterialNumberBW());
-                                    sparePartNo = pn2.getMaterialNumberBW();
-                                    foundIt = true;
-                                }
-                            }
-
-                            if (foundIt == false && !sparePartNo.equals("")) {
-                                LOGGER.warn("Could not convert material number '{}' to BW format", sparePartNo);
-                            }
-                        }
-                    }
+                    fixBWmatching();
 //                    System.out.printf("Task List file row: %s\t { %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s }", rowNum, machineNumber, label, classItem, articleNo, eqDenomination, type, docNo, interval, action, description, sparePartNo, spDenomination, qty, functionalArea);
                     m.put(rowNum, new TaskList(machineNumber, label, classItem, articleNo, eqDenomination, type, docNo, interval, action, description, sparePartNo, spDenomination, qty, functionalArea));
                 }
@@ -452,6 +408,53 @@ public class FileLoadBean implements Serializable {
             LOGGER.error("Exception in globalPartNumberMap stream: {}", e.getMessage());
         }
         return m;
+    }
+
+    private void fixBWmatching() {
+        // Convert task list sparePartNo to BW format
+        // Handle NPE
+        if (!globalPartNumberMap.isEmpty()) {
+            // If  sparePartNo is not in BW format convert, else skip
+
+            if (!globalPartNumberMap.containsKey(sparePartNo)) {
+                // if sparePartNo match TP format or Numeric, convert
+                // to BW format, else remove all non-digits and
+                // compare with map value numeric, else use
+                // sparePartNo as is (is excluded from rec. list)
+// System.out.printf("SparePartNo %s not in TS60, now processing%n", sparePartNo);
+
+                foundIt = false;
+                PartNumbers pn1 = globalPartNumberMap.values().stream()
+                        .filter(v -> v.getMaterialNumberTP().equals(sparePartNo)
+                        || v.getMaterialNumberNUM().equals(sparePartNo)
+                        ).findFirst().
+                        orElse(new PartNumbers("NA", "NA", "NA"));
+
+                if (!pn1.getMaterialNumberBW().equals("NA")) {
+// System.out.printf("Converting '%s' to '%s'%n", sparePartNo, pn1.getMaterialNumberBW());
+                    sparePartNo = pn1.getMaterialNumberBW();
+                    foundIt = true;
+                } else if (!sparePartNo.equals("")) {
+                    String nonDigitPN = removeNonDigits(sparePartNo);
+                    PartNumbers pn2 = globalPartNumberMap.values().stream()
+                            .filter(v -> v.getMaterialNumberNUM().equals(nonDigitPN)
+                            || removeNonDigits(v.getMaterialNumberBW()).equals(nonDigitPN)
+                            || removeNonDigits(v.getMaterialNumberTP()).equals(nonDigitPN)
+                            ).findFirst().
+                            orElse(new PartNumbers("NA", "NA", "NA"));
+
+                    if (!pn2.getMaterialNumberBW().equals("NA")) {
+//  System.out.printf("After removeNonDigits converting '%s' to '%s'%n", sparePartNo, pn2.getMaterialNumberBW());
+                        sparePartNo = pn2.getMaterialNumberBW();
+                        foundIt = true;
+                    }
+                }
+
+                if (foundIt == false && !sparePartNo.equals("")) {
+                    LOGGER.warn("Could not convert material number '{}' to BW format", sparePartNo);
+                }
+            }
+        }
     }
 
     /**
