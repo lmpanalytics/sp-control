@@ -5,6 +5,8 @@
  */
 package com.tetrapak.processing.parts_control.beans;
 
+import static com.tetrapak.processing.parts_control.beans.Utilities.removeNonDigits;
+import com.tetrapak.processing.parts_control.models.PartNumbers;
 import com.tetrapak.processing.parts_control.models.TaskList;
 import com.tetrapak.processing.parts_control.models.Purchases;
 import com.tetrapak.processing.parts_control.pc_models.Inventory;
@@ -18,6 +20,7 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.enterprise.context.RequestScoped;
@@ -30,7 +33,9 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Session;
+import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.Transaction;
 import static org.neo4j.driver.v1.Values.parameters;
 import org.neo4j.driver.v1.exceptions.ClientException;
@@ -67,10 +72,14 @@ public class FileLoadBean implements Serializable {
     private Neo4jService neo;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FileLoadBean.class);
+    private Map<String, PartNumbers> globalPartNumberMap;
     private static FileInputStream excelFile;
     private int relationShipCounter;
     private boolean taskListExceptionFlag1;
     private boolean taskListExceptionFlag2;
+    private boolean partNumberExceptionFlag;
+    private String sparePartNo;
+    private boolean foundIt;
 
     /**
      * Creates a new instance of FileLoadBean
@@ -80,6 +89,10 @@ public class FileLoadBean implements Serializable {
 
     @PostConstruct
     public void init() {
+        // INITIATE CLASS SPECIFIC MAPS AND FIELDS HERE - THE ORDER IS IMPORTANT
+        // Initialize globalPartNumberMap
+        globalPartNumberMap = new HashMap<>();
+        foundIt = false;
 //        System.out.println("I'm in FileLoadBean init() method");
     }
 
@@ -110,6 +123,7 @@ public class FileLoadBean implements Serializable {
                         Map<Integer, Purchases> purchaseMap = readPurchaseFile();
                         break;
                     case "Task List":
+                        collectPartNumbersFromDB();
                         Map<Integer, TaskList> taskListMap = readTaskListFile();
                         addTaskList(taskListMap);
                         break;
@@ -278,7 +292,7 @@ public class FileLoadBean implements Serializable {
                 int interval = 0;
                 String action = "";
                 String description = "";
-                String sparePartNo = "";
+                sparePartNo = "";
                 String spDenomination = "";
                 int qty = 0;
                 String functionalArea = "";
@@ -380,16 +394,62 @@ public class FileLoadBean implements Serializable {
 
                 //   Put to map starting from row 2 in the Excel sheet (idx 1)
                 if (rowNum != Integer.MAX_VALUE && rowNum >= 1) {
+                    // Convert task list sparePartNo to BW format
+                    // Handle NPE
+
+                    if (!globalPartNumberMap.isEmpty()) {
+                        // If  sparePartNo is not in BW format convert, else skip
+
+                        if (!globalPartNumberMap.containsKey(sparePartNo)) {
+                            // if sparePartNo match TP format or Numeric convert
+                            // to BW format, else remove all non-digits and
+                            // compare with map value numeric, else use 
+                            // sparePartNo as is (is excluded from rec. list)
+//                            System.out.printf("SparePartNo %s not in TS60, now processing%n", sparePartNo);
+
+                            foundIt = false;
+                            PartNumbers pn1 = globalPartNumberMap.values().stream()
+                                    .filter(v -> v.getMaterialNumberTP().equals(sparePartNo)
+                                    || v.getMaterialNumberNUM().equals(sparePartNo)
+                                    ).findFirst().
+                                    orElse(new PartNumbers("NA", "NA", "NA"));
+
+                            if (!pn1.getMaterialNumberBW().equals("NA")) {
+//                                System.out.printf("Converting '%s' to '%s'%n", sparePartNo, pn1.getMaterialNumberBW());
+                                sparePartNo = pn1.getMaterialNumberBW();
+                                foundIt = true;
+                            } else if (!sparePartNo.equals("")) {
+                                String nonDigitPN = removeNonDigits(sparePartNo);
+                                PartNumbers pn2 = globalPartNumberMap.values().stream()
+                                        .filter(v -> v.getMaterialNumberNUM().equals(nonDigitPN)
+                                        || removeNonDigits(v.getMaterialNumberBW()).equals(nonDigitPN)
+                                        || removeNonDigits(v.getMaterialNumberTP()).equals(nonDigitPN)
+                                        ).findFirst().
+                                        orElse(new PartNumbers("NA", "NA", "NA"));
+
+                                if (!pn2.getMaterialNumberBW().equals("NA")) {
+//                                    System.out.printf("After removeNonDigits converting '%s' to '%s'%n", sparePartNo, pn2.getMaterialNumberBW());
+                                    sparePartNo = pn2.getMaterialNumberBW();
+                                    foundIt = true;
+                                }
+                            }
+
+                            if (foundIt == false && !sparePartNo.equals("")) {
+                                LOGGER.warn("Could not convert material number '{}' to BW format", sparePartNo);
+                            }
+                        }
+                    }
 //                    System.out.printf("Task List file row: %s\t { %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s }", rowNum, machineNumber, label, classItem, articleNo, eqDenomination, type, docNo, interval, action, description, sparePartNo, spDenomination, qty, functionalArea);
                     m.put(rowNum, new TaskList(machineNumber, label, classItem, articleNo, eqDenomination, type, docNo, interval, action, description, sparePartNo, spDenomination, qty, functionalArea));
                 }
 
             }
-
         } catch (FileNotFoundException e) {
             LOGGER.error("Exception file not found {}", e.getMessage());
         } catch (IOException e) {
             LOGGER.error("Exception in IO {}", e.getMessage());
+        } catch (NoSuchElementException e) {
+            LOGGER.error("Exception in globalPartNumberMap stream: {}", e.getMessage());
         }
         return m;
     }
@@ -458,9 +518,7 @@ public class FileLoadBean implements Serializable {
                     int actionInterval = v.getInterval();
                     String action = v.getAction();
                     tx.run("MATCH (m:PcMaterial) "
-                            + "WHERE m.materialNumber = $materialNumber_id  OR "
-                            + "m.materialNumberNUM = $materialNumber_id OR "
-                            + "m.materialNumberTP = $materialNumber_id "
+                            + "WHERE m.materialNumber = $materialNumber_id "
                             + "MATCH (t:TaskList) WHERE t.id = $id "
                             + "CREATE (m)-[r:LISTED_IN]->(t) "
                             + "SET r.quantity = $qty "
@@ -495,6 +553,44 @@ public class FileLoadBean implements Serializable {
         } catch (Exception e) {
             LOGGER.error("Exception in adding TaskList: {}", e.getMessage());
         }
+    }
+
+    /**
+     * Collect Part Numbers from DB
+     */
+    private void collectPartNumbersFromDB() {
+        int materialCounter = 0;
+        // Sessions are lightweight and disposable connection wrappers.
+        try (Session session = neo.getDRIVER().session()) {
+
+            String tx = "MATCH (m:PcMaterial) RETURN "
+                    + "m.materialNumberNUM AS materialNumberNUM, "
+                    + "m.materialNumber AS materialNumberBW, "
+                    + "m.materialNumberTP AS materialNumberTP;";
+
+            StatementResult result = session.run(tx);
+            partNumberExceptionFlag = false;
+            while (result.hasNext()) {
+                Record next = result.next();
+
+                String materialNumberNUM = next.get("materialNumberNUM").asString();
+                String materialNumberBW = next.get("materialNumberBW").asString();
+                String materialNumberTP = next.get("materialNumberTP").asString();
+
+                // Add to globalPartNumberMap
+                globalPartNumberMap.put(materialNumberBW, new PartNumbers(materialNumberNUM, materialNumberBW, materialNumberTP));
+
+                materialCounter++;
+            }
+
+        } catch (Exception e) {
+            LOGGER.error("Exception in collectPartNumbers: {}", e.getMessage());
+            partNumberExceptionFlag = true;
+        }
+        if (!partNumberExceptionFlag) {
+            LOGGER.info("Succesfully collected part numbers from {} materials to map.", materialCounter);
+        }
+
     }
 
     @PreDestroy

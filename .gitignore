@@ -52,3 +52,4 @@ Thumbs.db
 /pc_neo4j_service-common/target/
 /pc_neo4j_service-ejb/target/
 /pc_models/target/
+/pc_processing-web/nbproject/

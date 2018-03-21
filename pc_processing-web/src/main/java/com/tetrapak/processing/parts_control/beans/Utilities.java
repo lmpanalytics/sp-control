@@ -12,4 +12,13 @@ package com.tetrapak.processing.parts_control.beans;
  */
 public class Utilities {
 
+    /**
+     * Removes all non-digits from part numbers
+     *
+     * @param sparePartNo to be cleaned
+     * @return cleaned spare part number
+     */
+    public static String removeNonDigits(String sparePartNo) {
+        return sparePartNo.replaceAll("[\\D.]", "");
+    }
 }
