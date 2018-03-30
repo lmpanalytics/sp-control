@@ -33,14 +33,32 @@
 
     <dependencies>
         <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.arquillian.junit</groupId>
+            <artifactId>arquillian-junit-container</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>pc_logic-common</artifactId>
             <version>${project.version}</version>
-        </dependency>
+        </dependency> 
         <dependency>
             <groupId>com.tetrapak.processing.parts_control</groupId>
             <artifactId>pc_neo4j_service-common</artifactId>
             <version>1.0-SNAPSHOT</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>com.tetrapak.processing.parts_control</groupId>
+            <artifactId>pc_neo4j_service-ejb</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <scope>test</scope>
             <type>jar</type>
         </dependency>
         <dependency>
@@ -52,24 +70,7 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>pc_models</artifactId>
             <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>javax</groupId>
-            <artifactId>javaee-api</artifactId>
-            <version>7.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.12</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.arquillian.junit</groupId>
-            <artifactId>arquillian-junit-container</artifactId>
-            <scope>test</scope>
-        </dependency>
+        </dependency>    
     </dependencies>
 
     <build>
@@ -83,7 +84,7 @@
                     <target>1.8</target>
                     <compilerArguments>
                         <endorseddirs>${endorsed.dir}</endorseddirs>
-                    </compilerArguments>
+                    </compilerArguments> 
                 </configuration>
             </plugin>
             <plugin>
@@ -113,7 +114,7 @@
                                     <artifactId>javaee-endorsed-api</artifactId>
                                     <version>7.0</version>
                                     <type>jar</type>
-                                </artifactItem>
+                                </artifactItem> 
                             </artifactItems>
                         </configuration>
                     </execution>
