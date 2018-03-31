@@ -49,15 +49,15 @@
             <version>${project.version}</version>
         </dependency> 
         <dependency>
-            <groupId>com.tetrapak.processing.parts_control</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>pc_neo4j_service-common</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>${project.version}</version>
             <type>jar</type>
         </dependency>
         <dependency>
-            <groupId>com.tetrapak.processing.parts_control</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>pc_neo4j_service-ejb</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>${project.version}</version>
             <scope>test</scope>
             <type>jar</type>
         </dependency>
@@ -72,7 +72,7 @@
             <version>${project.version}</version>
         </dependency>    
     </dependencies>
-
+    
     <build>
         <plugins>
             <plugin>

@@ -10,7 +10,6 @@ import com.tetrapak.processing.parts_control.pc_models.TaskListMetaData;
 import com.tetrapak.processing.parts_control.pc_neo4j_service_ejb.Neo4jService;
 import com.tetrapak.processing.parts_control.pc_neo4j_service_ejb.Neo4jServiceBean;
 import javax.ejb.EJB;
-import javax.naming.NamingException;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.junit.InSequence;
@@ -51,7 +50,7 @@ public class LogicBeanTest {
      */
     @Test
     @InSequence(1)
-    public void testCalculateInventory() throws NamingException {
+    public void testCalculateInventory() {
 
         System.out.println("calculateInventory");
         TaskListMetaData taskListMetaData = new TaskListMetaData("PC_100", "project2", "2", "2018-03-24", "SEPALMM");
