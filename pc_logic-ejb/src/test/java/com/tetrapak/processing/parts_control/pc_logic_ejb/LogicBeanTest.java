@@ -5,17 +5,20 @@
  */
 package com.tetrapak.processing.parts_control.pc_logic_ejb;
 
+import com.tetrapak.processing.parts_control.pc_models.Inventory;
 import com.tetrapak.processing.parts_control.pc_models.LogicParameters;
 import com.tetrapak.processing.parts_control.pc_models.TaskListMetaData;
 import com.tetrapak.processing.parts_control.pc_neo4j_service_ejb.Neo4jService;
 import com.tetrapak.processing.parts_control.pc_neo4j_service_ejb.Neo4jServiceBean;
+import java.io.File;
 import javax.ejb.EJB;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.junit.InSequence;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
-import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.jboss.shrinkwrap.api.spec.WebArchive;
+import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -29,19 +32,21 @@ import org.junit.runner.RunWith;
 public class LogicBeanTest {
 
     @Deployment
-    public static JavaArchive createDeployment() {
-        /*return ShrinkWrap.create(JavaArchive.class, "test.jar")
-        .addClasses(Logic.class,LogicBean.class, TaskListMetaData.class, LogicParameters.class, Inventory.class)
-        .addAsManifestResource(EmptyAsset.INSTANCE, "beans.xml");*/
-        JavaArchive archive = ShrinkWrap.create(JavaArchive.class, "test.jar")
+    public static WebArchive createDeployment() {
+
+        File[] files = Maven.resolver().loadPomFromFile("pom.xml").importRuntimeDependencies()
+                .resolve().withTransitivity().asFile();
+
+        WebArchive archive = ShrinkWrap.create(WebArchive.class, "test.war")
                 .addClasses(Logic.class, LogicBean.class,
-                        Neo4jService.class, Neo4jServiceBean.class)
+                        Neo4jService.class, Neo4jServiceBean.class,
+                        TaskListMetaData.class, LogicParameters.class, Inventory.class
+                ).addAsLibraries(files)
                 .addAsManifestResource(EmptyAsset.INSTANCE, "beans.xml");
-        archive.getContent().values().stream().forEach(c -> {
-            System.out.println(c.getPath().get());
-        });
+        System.out.println(archive.toString(true));
         return archive;
     }
+
     @EJB
     private Logic logicBean;
 
