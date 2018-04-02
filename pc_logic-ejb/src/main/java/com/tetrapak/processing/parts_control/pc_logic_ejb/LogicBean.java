@@ -99,9 +99,9 @@ public class LogicBean implements Logic, Serializable {
 
     private List<Inventory> matchMaterialNodes(Transaction tx, TaskListMetaData taskListMetaData, LogicParameters logicParameters) {
 
-        List<Inventory> materials = new ArrayList<>();
+        List<Inventory> rawMaterials = new ArrayList<>();
+        List<Inventory> processedMaterials = new ArrayList<>();
         boolean exceptionFlag = true;
-        int rowCounter = 0;
 
         try {
             // Get Task list Meta data
@@ -110,6 +110,7 @@ public class LogicBean implements Logic, Serializable {
             // Get Logic parameters
             int intervalLL = logicParameters.getactionIntervalLL();
             int intervalUL = logicParameters.getactionIntervalUL();
+
             StatementResult result = tx.run(
                     "MATCH (m:PcMaterial)-[r:LISTED_IN ]->(t:TaskList {id:$id}) "
                     + "WHERE r.actionInterval >= $intervalLL AND r.actionInterval <= $intervalUL "
@@ -124,10 +125,8 @@ public class LogicBean implements Logic, Serializable {
 
                 String materialNumber = next.get("materialNumber").asString();
                 String description = next.get("description").asString();
-                double t = next.get("quantity").asDouble();
-                int quantity = (int) (Math.ceil(t / 20));
-                materials.add(new Inventory(materialNumber, description, quantity));
-                rowCounter++;
+                int quantity = next.get("quantity").asInt();
+                rawMaterials.add(new Inventory(materialNumber, description, quantity));
             }
             exceptionFlag = false;
 
@@ -136,11 +135,25 @@ public class LogicBean implements Logic, Serializable {
             LOGGER.error("Error when calculating recommended parts to stock: {}", e.getMessage());
         }
         if (!exceptionFlag) {
-            LOGGER.info("Recommended {} material(s) to stock.", rowCounter);
+            // Processing of materials according to logic rules
+            processedMaterials = processMaterials(rawMaterials);
+            LOGGER.info("Recommended {} material(s) to stock.", processedMaterials.size());
             LocalTime time = LocalDateTime.now().toLocalTime();
-            message = message + time + ": Recommended " + rowCounter + " material(s) to stock.\n";
+            message = message + time + ": Recommended " + processedMaterials.size() + " material(s) to stock.\n";
         }
-        return materials;
+        return processedMaterials;
+    }
+
+    @Override
+    public List<Inventory> processMaterials(List<Inventory> rawMaterials) {
+        int i = 0;
+        for (Inventory rm : rawMaterials) {
+            int q = (int) Math.ceil((double) rm.getQuantity() / 20);
+            rawMaterials.set(i, new Inventory(rm.getMaterial(), rm.getDescription(), q));
+            i++;
+        }
+
+        return rawMaterials;
     }
 
     @PreDestroy

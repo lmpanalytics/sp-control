@@ -11,6 +11,8 @@ import com.tetrapak.processing.parts_control.pc_models.TaskListMetaData;
 import com.tetrapak.processing.parts_control.pc_neo4j_service_ejb.Neo4jService;
 import com.tetrapak.processing.parts_control.pc_neo4j_service_ejb.Neo4jServiceBean;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import javax.ejb.EJB;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
@@ -20,6 +22,7 @@ import org.jboss.shrinkwrap.api.asset.EmptyAsset;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -64,5 +67,22 @@ public class LogicBeanTest {
 
 //        Map<String, Inventory> map = logicBean.getRecommendedMaterialMap();
         Assert.assertTrue(logicBean.getRecommendedMaterialMap().containsKey("  90606-5824"));
+    }
+
+//    @Ignore ("Not ready yet...")
+    @Test
+    @InSequence(2)
+    public void testProcessingOfRawMaterials() {
+        System.out.println("Testing Processing Of Raw Materials");
+
+        List<Inventory> testMaterials = new ArrayList<>();
+        testMaterials.add(new Inventory("00000000001", "piston", 1));
+        testMaterials.add(new Inventory("00000000002", "piston seal", 25));
+        testMaterials.add(new Inventory("00000000003", "o-ring", 30));
+
+        Assert.assertEquals(1, logicBean.processMaterials(testMaterials).get(0).getQuantity());
+        Assert.assertEquals(2, logicBean.processMaterials(testMaterials).get(1).getQuantity());
+        Assert.assertEquals(2, logicBean.processMaterials(testMaterials).get(2).getQuantity());
+
     }
 }
