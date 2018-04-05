@@ -7,6 +7,7 @@ package com.tetrapak.processing.parts_control.pc_logic_ejb;
 
 import com.tetrapak.processing.parts_control.pc_models.Inventory;
 import com.tetrapak.processing.parts_control.pc_models.LogicParameters;
+import com.tetrapak.processing.parts_control.pc_models.TaskListEvent;
 import com.tetrapak.processing.parts_control.pc_models.TaskListMetaData;
 import com.tetrapak.processing.parts_control.pc_neo4j_service_ejb.Neo4jService;
 import com.tetrapak.processing.parts_control.pc_neo4j_service_ejb.Neo4jServiceBean;
@@ -56,11 +57,12 @@ public class LogicBeanTest {
     /**
      * Test of calculateInventory method, of class LogicBean.
      */
+    @Ignore("Not ready to test yet")
     @Test
-    @InSequence(1)
+    @InSequence(2)
     public void testCalculateInventory() {
 
-        System.out.println("calculateInventory");
+        System.out.println("Test Calculate Inventory");
         TaskListMetaData taskListMetaData = new TaskListMetaData("PC_100", "project2", "2", "2018-03-24", "SEPALMM");
         LogicParameters logicParameters = new LogicParameters(0, 500, 0);
         logicBean.calculateInventory(taskListMetaData, logicParameters);
@@ -69,20 +71,42 @@ public class LogicBeanTest {
         Assert.assertTrue(logicBean.getRecommendedMaterialMap().containsKey("  90606-5824"));
     }
 
-//    @Ignore ("Not ready yet...")
     @Test
-    @InSequence(2)
-    public void testProcessingOfRawMaterials() {
-        System.out.println("Testing Processing Of Raw Materials");
+    @InSequence(1)
+    public void testProcessingOfEvents() {
+        System.out.println("Test Processing of Task list events");
 
-        List<Inventory> testMaterials = new ArrayList<>();
-        testMaterials.add(new Inventory("00000000001", "piston", 1));
-        testMaterials.add(new Inventory("00000000002", "piston seal", 25));
-        testMaterials.add(new Inventory("00000000003", "o-ring", 30));
+        List<TaskListEvent> testEvents = new ArrayList<>();
 
-        Assert.assertEquals(1, logicBean.processMaterials(testMaterials).get(0).getQuantity());
-        Assert.assertEquals(2, logicBean.processMaterials(testMaterials).get(1).getQuantity());
-        Assert.assertEquals(2, logicBean.processMaterials(testMaterials).get(2).getQuantity());
+//        isStocked: true (item to keep an eye on before planned change)
+        testEvents.add(new TaskListEvent("check", "piston", "00000000001", "spDenomination", 1, "NA"));
+        testEvents.add(new TaskListEvent("change", "piston", "00000000001", "spDenomination", 1, "NA"));
+
+//        isStocked: true (item to keep an eye on before planned turn)        
+        testEvents.add(new TaskListEvent("check", "disc", "00000000002", "spDenomination", 25, "NA"));
+        testEvents.add(new TaskListEvent("turn", "disc", "00000000002", "spDenomination", 25, "NA"));
+
+//        isStocked: true (not planned to change)        
+        testEvents.add(new TaskListEvent("check", "gear box", "00000000003", "spDenomination", 30, "NA"));
+
+//        isStocked: true (not planned to change)        
+        testEvents.add(new TaskListEvent("check", "plate", "00000000004", "spDenomination", 0, "NA"));
+        testEvents.add(new TaskListEvent("check", "plate", "00000000004", "spDenomination", 0, "NA"));
+
+//        isStocked: true (not planned to change)        
+        testEvents.add(new TaskListEvent("check", "piston seal", "00000000005", "spDenomination", 0, "NA"));
+        testEvents.add(new TaskListEvent("check", "piston seal", "00000000005", "spDenomination", 0, "NA"));
+        testEvents.add(new TaskListEvent("change", "piston seal", "00000000005", "spDenomination", 0, "NA"));
+
+//        isStocked: false (planned maintenance event)         
+        testEvents.add(new TaskListEvent("turn", "disc", "00000000006", "spDenomination", 0, "NA"));
+
+//        isStocked: false (planned maintenance event)        
+        testEvents.add(new TaskListEvent("change", "disc", "00000000006", "spDenomination", 0, "NA"));
+
+        Assert.assertEquals(1, logicBean.processEvents(testEvents).get(1).getQuantity());
+        Assert.assertEquals(2, logicBean.processEvents(testEvents).get(3).getQuantity());
+        Assert.assertEquals(2, logicBean.processEvents(testEvents).get(4).getQuantity());
 
     }
 }

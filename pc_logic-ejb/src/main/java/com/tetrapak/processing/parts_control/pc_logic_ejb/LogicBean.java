@@ -6,6 +6,7 @@ package com.tetrapak.processing.parts_control.pc_logic_ejb;
 
 import com.tetrapak.processing.parts_control.pc_models.Inventory;
 import com.tetrapak.processing.parts_control.pc_models.LogicParameters;
+import com.tetrapak.processing.parts_control.pc_models.TaskListEvent;
 import com.tetrapak.processing.parts_control.pc_models.TaskListMetaData;
 import com.tetrapak.processing.parts_control.pc_neo4j_service_ejb.Neo4jService;
 import java.io.Serializable;
@@ -91,15 +92,15 @@ public class LogicBean implements Logic, Serializable {
             return session.readTransaction(new TransactionWork<List<Inventory>>() {
                 @Override
                 public List<Inventory> execute(Transaction tx) {
-                    return matchMaterialNodes(tx, taskListMetaData, logicParameters);
+                    return queryDB(tx, taskListMetaData, logicParameters);
                 }
             });
         }
     }
 
-    private List<Inventory> matchMaterialNodes(Transaction tx, TaskListMetaData taskListMetaData, LogicParameters logicParameters) {
+    private List<Inventory> queryDB(Transaction tx, TaskListMetaData taskListMetaData, LogicParameters logicParameters) {
 
-        List<Inventory> rawMaterials = new ArrayList<>();
+        List<TaskListEvent> events = new ArrayList<>();
         List<Inventory> processedMaterials = new ArrayList<>();
         boolean exceptionFlag = true;
 
@@ -110,11 +111,12 @@ public class LogicBean implements Logic, Serializable {
             // Get Logic parameters
             int intervalLL = logicParameters.getactionIntervalLL();
             int intervalUL = logicParameters.getactionIntervalUL();
-
+//            Change id matching to be a collection of IDs
+//            Possibly group materials by machine model from task list?
             StatementResult result = tx.run(
                     "MATCH (m:PcMaterial)-[r:LISTED_IN ]->(t:TaskList {id:$id}) "
                     + "WHERE r.actionInterval >= $intervalLL AND r.actionInterval <= $intervalUL "
-                    + "RETURN m.materialNumber AS materialNumber, m.description AS description, SUM(r.quantity) AS quantity;",
+                    + "RETURN t.action AS action, t.description AS description, m.materialNumber AS materialNumber, m.denomination AS denomination, SUM(r.quantity) AS quantity, t.functionalArea AS functionalArea;",
                     Values.parameters(
                             "id", id,
                             "intervalLL", intervalLL,
@@ -123,10 +125,14 @@ public class LogicBean implements Logic, Serializable {
             while (result.hasNext()) {
                 Record next = result.next();
 
-                String materialNumber = next.get("materialNumber").asString();
-                String description = next.get("description").asString();
-                int quantity = next.get("quantity").asInt();
-                rawMaterials.add(new Inventory(materialNumber, description, quantity));
+                String tAction = next.get("action").asString();
+                String tDescription = next.get("description").asString();
+                String mMaterialNumber = next.get("materialNumber").asString();
+                String mDenomination = next.get("denomination").asString();
+                int rQuantity = next.get("quantity").asInt();
+                String tFunctionalArea = next.get("functionalArea").asString();
+
+                events.add(new TaskListEvent(tAction, tDescription, mMaterialNumber, mDenomination, rQuantity, tFunctionalArea));
             }
             exceptionFlag = false;
 
@@ -136,7 +142,7 @@ public class LogicBean implements Logic, Serializable {
         }
         if (!exceptionFlag) {
             // Processing of materials according to logic rules
-            processedMaterials = processMaterials(rawMaterials);
+            processedMaterials = processEvents(events);
             LOGGER.info("Recommended {} material(s) to stock.", processedMaterials.size());
             LocalTime time = LocalDateTime.now().toLocalTime();
             message = message + time + ": Recommended " + processedMaterials.size() + " material(s) to stock.\n";
@@ -144,16 +150,22 @@ public class LogicBean implements Logic, Serializable {
         return processedMaterials;
     }
 
+    /**
+     * Process Task list events and Materials according to logic rules.
+     *
+     * @param events
+     * @return inventory list of materials to stock
+     */
     @Override
-    public List<Inventory> processMaterials(List<Inventory> rawMaterials) {
-        int i = 0;
-        for (Inventory rm : rawMaterials) {
-            int q = (int) Math.ceil((double) rm.getQuantity() / 20);
-            rawMaterials.set(i, new Inventory(rm.getMaterial(), rm.getDescription(), q));
-            i++;
+    public List<Inventory> processEvents(List<TaskListEvent> events) {
+        List<Inventory> inventory = new ArrayList<>();
+
+        for (TaskListEvent e : events) {
+            int q = (int) Math.ceil((double) e.getQty() / 20);
+            inventory.add(new Inventory(e.getSparePartNo(), e.getSpDenomination(), q));
         }
 
-        return rawMaterials;
+        return inventory;
     }
 
     @PreDestroy

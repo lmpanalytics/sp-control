@@ -7,6 +7,7 @@ package com.tetrapak.processing.parts_control.pc_logic_ejb;
 
 import com.tetrapak.processing.parts_control.pc_models.Inventory;
 import com.tetrapak.processing.parts_control.pc_models.LogicParameters;
+import com.tetrapak.processing.parts_control.pc_models.TaskListEvent;
 import com.tetrapak.processing.parts_control.pc_models.TaskListMetaData;
 import java.util.List;
 import java.util.Map;
@@ -24,7 +25,7 @@ public interface Logic {
 
     public void calculateInventory(TaskListMetaData taskListMetaData, LogicParameters logicParameters);
     
-    public List<Inventory> processMaterials(List<Inventory> rawMaterials);
+    public List<Inventory> processEvents(List<TaskListEvent> events);
 
     public Map<String, Inventory> getRecommendedMaterialMap();
 
