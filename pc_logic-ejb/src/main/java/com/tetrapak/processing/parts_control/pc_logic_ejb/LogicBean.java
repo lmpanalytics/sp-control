@@ -13,9 +13,11 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.ejb.EJB;
@@ -45,6 +47,11 @@ public class LogicBean implements Logic, Serializable {
     private static final Logger LOGGER = LoggerFactory.getLogger(LogicBean.class);
     private Map<String, Inventory> recommendedMaterialMap;
     private String message;
+    private boolean is_SKU;
+
+    private enum Action {
+        A_CHECK, B_TURN, C_CHANGE
+    }
 
     @PostConstruct
     public void init() {
@@ -55,6 +62,7 @@ public class LogicBean implements Logic, Serializable {
 
         // Initialize message
         message = "";
+        is_SKU = false;
     }
 
     @Override
@@ -116,7 +124,7 @@ public class LogicBean implements Logic, Serializable {
             StatementResult result = tx.run(
                     "MATCH (m:PcMaterial)-[r:LISTED_IN ]->(t:TaskList {id:$id}) "
                     + "WHERE r.actionInterval >= $intervalLL AND r.actionInterval <= $intervalUL "
-                    + "RETURN t.action AS action, t.description AS description, m.materialNumber AS materialNumber, m.denomination AS denomination, SUM(r.quantity) AS quantity, t.functionalArea AS functionalArea;",
+                    + "RETURN t.equipment AS equipment, t.action AS action, t.description AS description, m.materialNumber AS materialNumber, m.denomination AS denomination, r.quantity AS quantity, t.functionalArea AS functionalArea;",
                     Values.parameters(
                             "id", id,
                             "intervalLL", intervalLL,
@@ -125,6 +133,7 @@ public class LogicBean implements Logic, Serializable {
             while (result.hasNext()) {
                 Record next = result.next();
 
+                String equipment = next.get("equipment").asString();
                 String tAction = next.get("action").asString();
                 String tDescription = next.get("description").asString();
                 String mMaterialNumber = next.get("materialNumber").asString();
@@ -132,7 +141,7 @@ public class LogicBean implements Logic, Serializable {
                 int rQuantity = next.get("quantity").asInt();
                 String tFunctionalArea = next.get("functionalArea").asString();
 
-                events.add(new TaskListEvent(tAction, tDescription, mMaterialNumber, mDenomination, rQuantity, tFunctionalArea));
+                events.add(new TaskListEvent(equipment, tAction, tDescription, mMaterialNumber, mDenomination, rQuantity, tFunctionalArea));
             }
             exceptionFlag = false;
 
@@ -158,13 +167,66 @@ public class LogicBean implements Logic, Serializable {
      */
     @Override
     public List<Inventory> processEvents(List<TaskListEvent> events) {
-        List<Inventory> inventory = new ArrayList<>();
+        Map<Integer, Inventory> skuMap = new HashMap<>();
 
-        for (TaskListEvent e : events) {
-            int q = (int) Math.ceil((double) e.getQty() / 20);
-            inventory.add(new Inventory(e.getSparePartNo(), e.getSpDenomination(), q));
-        }
+// **************************** PRE-PROCESSING ********************************
+//       Filter action types and fix natural language ordering of actions
+        events.stream().filter(p -> p.getAction().equalsIgnoreCase("check")
+                || p.getAction().equalsIgnoreCase("change")
+                || p.getAction().equalsIgnoreCase("turn")).forEach((e) -> {
+            if (e.getAction().equalsIgnoreCase("check")) {
+                e.setAction(Action.A_CHECK.toString());
+            } else if (e.getAction().equalsIgnoreCase("turn")) {
+                e.setAction(Action.B_TURN.toString());
+            } else if (e.getAction().equalsIgnoreCase("change")) {
+                e.setAction(Action.C_CHANGE.toString());
+            }
+        });
 
+        Comparator<TaskListEvent> taskListEventComparator
+                = Comparator.comparing(TaskListEvent::getEquipment)
+                        .thenComparing(TaskListEvent::getSparePartNo)
+                        .thenComparing(TaskListEvent::getAction);
+
+        events.sort(taskListEventComparator);
+
+        Map<String, Map<String, List<TaskListEvent>>> groupedMap = events.stream().
+                collect(Collectors.groupingBy(TaskListEvent::getEquipment,
+                        Collectors.groupingBy(TaskListEvent::getSparePartNo)));
+
+// ****************************** APPLY LOGIC **********************************
+        groupedMap.values().stream().forEachOrdered(eq -> {
+            eq.values().stream().forEachOrdered(sp -> {
+                is_SKU = false;
+
+                sp.stream().forEachOrdered(tle -> {
+
+// Singleton CHECK action, or followed by TURN and/or CHANGE is SKU
+                    if (is_SKU || tle.getAction().equals(Action.A_CHECK.toString())) {
+                        is_SKU = true;
+
+//                        Calculate quantity to stock
+                        int q = (int) Math.ceil((double) tle.getQty() / 20);
+
+                        int key = tle.getSparePartNo().hashCode();
+                        skuMap.put(key, new Inventory(
+                                tle.getSparePartNo(),
+                                tle.getSpDenomination(),
+                                q)
+                        );
+//                        System.out.printf("Stock: %s, %s, %s, %s%n", tle.getEquipment(), tle.getSparePartNo(), tle.getQty(), tle.getAction());
+
+                    } else {
+//                        System.out.printf("No stock: %s, %s, %s, %s%n", tle.getEquipment(), tle.getSparePartNo(), tle.getQty(), tle.getAction());
+                    }
+
+                });
+            });
+        });
+
+        List<Inventory> inventory = skuMap.values().stream().collect(Collectors.toList());
+//        System.out.println("RECOMMENDED INVENTORY LIST:");
+//        inventory.forEach(c -> System.out.printf("%s, %s, %s%n", c.getMaterial(), c.getDescription(), c.getQuantity()));
         return inventory;
     }
 
