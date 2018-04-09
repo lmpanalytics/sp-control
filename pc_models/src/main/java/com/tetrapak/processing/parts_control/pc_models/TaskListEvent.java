@@ -14,7 +14,7 @@ import java.util.Objects;
  */
 public class TaskListEvent {
 
-    private final String equipment;
+    private final String family;
 //    private final String label;
 //    private final String classItem;
 //    private final String articleNo;
@@ -29,8 +29,9 @@ public class TaskListEvent {
     private final int qty;
     private final String functionalArea;
 
-    public TaskListEvent(String equipment, String action, String description, String sparePartNo, String spDenomination, int qty, String functionalArea) {
-        this.equipment = equipment;
+    // Constructor
+    public TaskListEvent(String family, String action, String description, String sparePartNo, String spDenomination, int qty, String functionalArea) {
+        this.family = family;
         this.action = action;
         this.description = description;
         this.sparePartNo = sparePartNo;
@@ -41,14 +42,14 @@ public class TaskListEvent {
 
     @Override
     public int hashCode() {
-        int hash = 3;
-        hash = 47 * hash + Objects.hashCode(this.equipment);
-        hash = 47 * hash + Objects.hashCode(this.action);
-        hash = 47 * hash + Objects.hashCode(this.description);
-        hash = 47 * hash + Objects.hashCode(this.sparePartNo);
-        hash = 47 * hash + Objects.hashCode(this.spDenomination);
-        hash = 47 * hash + this.qty;
-        hash = 47 * hash + Objects.hashCode(this.functionalArea);
+        int hash = 7;
+        hash = 23 * hash + Objects.hashCode(this.family);
+        hash = 23 * hash + Objects.hashCode(this.action);
+        hash = 23 * hash + Objects.hashCode(this.description);
+        hash = 23 * hash + Objects.hashCode(this.sparePartNo);
+        hash = 23 * hash + Objects.hashCode(this.spDenomination);
+        hash = 23 * hash + this.qty;
+        hash = 23 * hash + Objects.hashCode(this.functionalArea);
         return hash;
     }
 
@@ -67,7 +68,7 @@ public class TaskListEvent {
         if (this.qty != other.qty) {
             return false;
         }
-        if (!Objects.equals(this.equipment, other.equipment)) {
+        if (!Objects.equals(this.family, other.family)) {
             return false;
         }
         if (!Objects.equals(this.action, other.action)) {
@@ -88,10 +89,8 @@ public class TaskListEvent {
         return true;
     }
 
-    
-    
-    public String getEquipment() {
-        return equipment;
+    public String getFamily() {
+        return family;
     }
 
     public String getAction() {

@@ -46,8 +46,10 @@ public class LogicBean implements Logic, Serializable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LogicBean.class);
     private Map<String, Inventory> recommendedMaterialMap;
+    private Map<Integer, Inventory> skuMap;
     private String message;
     private boolean is_SKU;
+    private int sumMtrlQty;
 
     private enum Action {
         A_CHECK, B_TURN, C_CHANGE
@@ -57,12 +59,14 @@ public class LogicBean implements Logic, Serializable {
     public void init() {
         // INITIATE CLASS SPECIFIC MAPS AND FIELDS HERE - THE ORDER IS IMPORTANT
 
-        // Initialize material maps
+        // Initialize maps
         recommendedMaterialMap = new HashMap<>();
+        skuMap = new HashMap<>();
 
         // Initialize message
         message = "";
         is_SKU = false;
+        sumMtrlQty = 0;
     }
 
     @Override
@@ -120,11 +124,10 @@ public class LogicBean implements Logic, Serializable {
             int intervalLL = logicParameters.getactionIntervalLL();
             int intervalUL = logicParameters.getactionIntervalUL();
 //            Change id matching to be a collection of IDs
-//            Possibly group materials by machine model from task list?
             StatementResult result = tx.run(
                     "MATCH (m:PcMaterial)-[r:LISTED_IN ]->(t:TaskList {id:$id}) "
                     + "WHERE r.actionInterval >= $intervalLL AND r.actionInterval <= $intervalUL "
-                    + "RETURN t.equipment AS equipment, t.action AS action, t.description AS description, m.materialNumber AS materialNumber, m.denomination AS denomination, r.quantity AS quantity, t.functionalArea AS functionalArea;",
+                    + "RETURN m.family AS family, t.action AS action, t.description AS description, m.materialNumber AS materialNumber, m.denomination AS denomination, r.quantity AS quantity, t.functionalArea AS functionalArea;",
                     Values.parameters(
                             "id", id,
                             "intervalLL", intervalLL,
@@ -133,7 +136,7 @@ public class LogicBean implements Logic, Serializable {
             while (result.hasNext()) {
                 Record next = result.next();
 
-                String equipment = next.get("equipment").asString();
+                String family = next.get("family").asString();
                 String tAction = next.get("action").asString();
                 String tDescription = next.get("description").asString();
                 String mMaterialNumber = next.get("materialNumber").asString();
@@ -141,7 +144,7 @@ public class LogicBean implements Logic, Serializable {
                 int rQuantity = next.get("quantity").asInt();
                 String tFunctionalArea = next.get("functionalArea").asString();
 
-                events.add(new TaskListEvent(equipment, tAction, tDescription, mMaterialNumber, mDenomination, rQuantity, tFunctionalArea));
+                events.add(new TaskListEvent(family, tAction, tDescription, mMaterialNumber, mDenomination, rQuantity, tFunctionalArea));
             }
             exceptionFlag = false;
 
@@ -167,7 +170,6 @@ public class LogicBean implements Logic, Serializable {
      */
     @Override
     public List<Inventory> processEvents(List<TaskListEvent> events) {
-        Map<Integer, Inventory> skuMap = new HashMap<>();
 
 // **************************** PRE-PROCESSING ********************************
 //       Filter action types and fix natural language ordering of actions
@@ -184,42 +186,61 @@ public class LogicBean implements Logic, Serializable {
         });
 
         Comparator<TaskListEvent> taskListEventComparator
-                = Comparator.comparing(TaskListEvent::getEquipment)
+                = Comparator.comparing(TaskListEvent::getFamily)
                         .thenComparing(TaskListEvent::getSparePartNo)
                         .thenComparing(TaskListEvent::getAction);
 
         events.sort(taskListEventComparator);
 
         Map<String, Map<String, List<TaskListEvent>>> groupedMap = events.stream().
-                collect(Collectors.groupingBy(TaskListEvent::getEquipment,
+                collect(Collectors.groupingBy(TaskListEvent::getFamily,
                         Collectors.groupingBy(TaskListEvent::getSparePartNo)));
 
-// ****************************** APPLY LOGIC **********************************
-        groupedMap.values().stream().forEachOrdered(eq -> {
-            eq.values().stream().forEachOrdered(sp -> {
+// ****************************** QUALIFICATION **********************************
+        groupedMap.values().stream().forEachOrdered(fam -> {
+            fam.values().stream().forEachOrdered(sp -> {
                 is_SKU = false;
 
                 sp.stream().forEachOrdered(tle -> {
 
-// Singleton CHECK action, or followed by TURN and/or CHANGE is SKU
+// Singleton CHECK action (or followed by TURN and/or CHANGE) equals an SKU
                     if (is_SKU || tle.getAction().equals(Action.A_CHECK.toString())) {
                         is_SKU = true;
 
-//                        Calculate quantity to stock
-                        int q = (int) Math.ceil((double) tle.getQty() / 20);
-
+//                        Reset sum of material quantity for each new material
                         int key = tle.getSparePartNo().hashCode();
-                        skuMap.put(key, new Inventory(
-                                tle.getSparePartNo(),
-                                tle.getSpDenomination(),
-                                q)
-                        );
-//                        System.out.printf("Stock: %s, %s, %s, %s%n", tle.getEquipment(), tle.getSparePartNo(), tle.getQty(), tle.getAction());
+                        boolean existingSKU = skuMap.containsKey(key);
 
+                        if (!existingSKU) {
+                            sumMtrlQty = tle.getQty();
+
+                        } else if (tle.getAction().equals(Action.A_CHECK.toString())) {
+//                            Quantity assigned to action 'CHECK' is quantity basis
+                            sumMtrlQty = sumMtrlQty + tle.getQty();
+                        }
+
+// ************************** APPLY LOGIC BEGINS *******************************
+//                        Calculate quantity to stock
+                        if (tle.getFamily().equals("Piston")
+                                || tle.getFamily().equals("Piston seal")) {
+                            if (sumMtrlQty % 3 == 0) {
+//                                3-Piston Homogenizer
+                                putToSKUmap(key, tle, 3);
+                            } else {
+//                                5-Piston Homogenizer
+                                putToSKUmap(key, tle, 5);
+                            }
+                        } else {
+//                            Calculate stock quantity by dafault formula
+                            int q = (int) Math.ceil((double) sumMtrlQty / 20);
+                            putToSKUmap(key, tle, q);
+                        }
+
+//                        System.out.printf("Stock: %s, %s, %s, %s%n", tle.getFamily(), tle.getSparePartNo(), tle.getQty(), tle.getAction());
                     } else {
-//                        System.out.printf("No stock: %s, %s, %s, %s%n", tle.getEquipment(), tle.getSparePartNo(), tle.getQty(), tle.getAction());
+//                        System.out.printf("No stock: %s, %s, %s, %s%n", tle.getFamily(), tle.getSparePartNo(), tle.getQty(), tle.getAction());
                     }
-
+// **************************** APPLY LOGIC ENDS ******************************* 
                 });
             });
         });
@@ -228,6 +249,14 @@ public class LogicBean implements Logic, Serializable {
 //        System.out.println("RECOMMENDED INVENTORY LIST:");
 //        inventory.forEach(c -> System.out.printf("%s, %s, %s%n", c.getMaterial(), c.getDescription(), c.getQuantity()));
         return inventory;
+    }
+
+    private void putToSKUmap(int key, TaskListEvent tle, int q) {
+        skuMap.put(key, new Inventory(
+                tle.getSparePartNo(),
+                tle.getSpDenomination(),
+                q)
+        );
     }
 
     @PreDestroy

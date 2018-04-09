@@ -83,48 +83,56 @@ public class LogicBeanTest {
 
 // ***************************** ADD EVENT OBJECTS *****************************
 //        isStocked: true (item to keep an eye on before planned change)
-        testEvents.add(new TaskListEvent("Tetra Alex 400", "check", "piston", "00000000001", "spDenomination", 1, "NA"));
-        testEvents.add(new TaskListEvent("Tetra Alex 400", "change", "piston", "00000000001", "spDenomination", 1, "NA"));
+        testEvents.add(new TaskListEvent("Piston", "check", "piston", "00000000001", "spDenomination", 3, "NA"));
+        testEvents.add(new TaskListEvent("Piston", "change", "piston", "00000000001", "spDenomination", 3, "NA"));
+        testEvents.add(new TaskListEvent("Piston", "check", "piston", "00000000001", "spDenomination", 3, "NA"));
+        testEvents.add(new TaskListEvent("Piston", "change", "piston", "00000000001", "spDenomination", 3, "NA"));
+        testEvents.add(new TaskListEvent("Piston", "check", "piston", "00000000001", "spDenomination", 5, "NA"));
+        testEvents.add(new TaskListEvent("Piston", "change", "piston", "00000000001", "spDenomination", 5, "NA"));
+        testEvents.add(new TaskListEvent("Piston", "check", "piston", "000000000x1", "spDenomination", 3, "NA"));
+        testEvents.add(new TaskListEvent("Piston", "change", "piston", "000000000x1", "spDenomination", 3, "NA"));
 
 //        isStocked: true (item to keep an eye on before planned turn)        
-        testEvents.add(new TaskListEvent("Tetra Alex 400", "check", "disc", "00000000002", "spDenomination", 25, "NA"));
-        testEvents.add(new TaskListEvent("Tetra Alex 400", "turn", "disc", "00000000002", "spDenomination", 25, "NA"));
+        testEvents.add(new TaskListEvent("Forcer Disc", "check", "disc", "00000000002", "spDenomination", 25, "NA"));
+        testEvents.add(new TaskListEvent("Forcer Disc", "turn", "disc", "00000000002", "spDenomination", 25, "NA"));
 
 //        isStocked: true (not planned to change)        
-        testEvents.add(new TaskListEvent("Tetra Alex 400", "check", "gear box", "00000000003", "spDenomination", 30, "NA"));
+        testEvents.add(new TaskListEvent("Gear Box", "check", "gear box", "00000000003", "spDenomination", 30, "NA"));
 
 //        isStocked: true (not planned to change)        
-        testEvents.add(new TaskListEvent("Tetra Alex 400", "check", "plate", "00000000004", "spDenomination", 1, "NA"));
-        testEvents.add(new TaskListEvent("Tetra Alex 400", "check", "plate", "00000000004", "spDenomination", 1, "NA"));
+        testEvents.add(new TaskListEvent("Plates Sanitary", "check", "plate", "00000000004", "spDenomination", 1, "NA"));
+        testEvents.add(new TaskListEvent("Plates Sanitary", "check", "plate", "00000000004", "spDenomination", 1, "NA"));
 
 //        isStocked: true (not planned to change)        
-        testEvents.add(new TaskListEvent("Tetra Alex 400", "check", "piston seal", "00000000005", "spDenomination", 5, "NA"));
-        testEvents.add(new TaskListEvent("Tetra Alex 400", "check", "piston seal", "00000000005", "spDenomination", 5, "NA"));
-        testEvents.add(new TaskListEvent("Tetra Alex 400", "change", "piston seal", "00000000005", "spDenomination", 5, "NA"));
+        testEvents.add(new TaskListEvent("Piston seal", "check", "piston seal", "00000000005", "spDenomination", 5, "NA"));
+        testEvents.add(new TaskListEvent("Piston seal", "check", "piston seal", "00000000005", "spDenomination", 5, "NA"));
+        testEvents.add(new TaskListEvent("Piston seal", "change", "piston seal", "00000000005", "spDenomination", 5, "NA"));
 
 //        isStocked: false (planned maintenance event)         
-        testEvents.add(new TaskListEvent("Tetra Alex 400", "turn", "disc", "00000000006", "spDenomination", 100, "NA"));
+        testEvents.add(new TaskListEvent("Forcer Disc", "turn", "disc", "00000000006", "spDenomination", 100, "NA"));
 
 //        isStocked: false (planned maintenance event)        
-        testEvents.add(new TaskListEvent("Tetra Alex 400", "change", "disc", "00000000006", "spDenomination", 100, "NA"));
+        testEvents.add(new TaskListEvent("Forcer Disc", "change", "disc", "00000000006", "spDenomination", 100, "NA"));
 
 //        Shuffle the order of events to make the test harder
         Collections.shuffle(testEvents);
 
 // ******************** TEST EVENT OBJECT IN LIST POSITION *********************
-//        Assert.assertEquals(1, 1);
         List<Inventory> inventory = logicBean.processEvents(testEvents);
         inventory.forEach(sp -> {
             if (sp.getMaterial().equals("00000000001")) {
-                Assert.assertThat(sp.getQuantity(), equalTo(1));
-//                Assert.assertEquals(1, sp.getQuantity());
+                Assert.assertThat(sp.getQuantity(), equalTo(5));
+            } else if (sp.getMaterial().equals("000000000x1")) {
+                Assert.assertThat(sp.getQuantity(), equalTo(3));
             } else if (sp.getMaterial().equals("00000000002")) {
-                Assert.assertEquals(2, sp.getQuantity());
+                Assert.assertThat(sp.getQuantity(), equalTo(2));
             } else if (sp.getMaterial().equals("00000000003")) {
-                Assert.assertEquals(2, sp.getQuantity());
+                Assert.assertThat(sp.getQuantity(), equalTo(2));
+            } else if (sp.getMaterial().equals("00000000005")) {
+                Assert.assertThat(sp.getQuantity(), equalTo(5));
             }
 
         });
-        Assert.assertThat(inventory, hasSize(equalTo(5)));
+        Assert.assertThat(inventory, hasSize(equalTo(6)));
     }
 }
