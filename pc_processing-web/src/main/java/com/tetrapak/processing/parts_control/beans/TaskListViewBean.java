@@ -37,7 +37,7 @@ public class TaskListViewBean implements Serializable {
 
     private static final long serialVersionUID = 1L;
     private List<TaskListMetaData> taskLists;
-    private TaskListMetaData selectedTaskList;
+    private List<TaskListMetaData> selectedTaskLists; // from jsf recommendedParts
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TaskListViewBean.class);
     private static Session session;
@@ -56,6 +56,7 @@ public class TaskListViewBean implements Serializable {
         session = neo4jServiceBean.getDRIVER().session();
         // Initialize taskList list
         taskLists = new ArrayList<>();
+        selectedTaskLists = new ArrayList<>();
 
         queryGlobalTaskLists();
 
@@ -102,12 +103,12 @@ public class TaskListViewBean implements Serializable {
         this.taskLists = taskLists;
     }
 
-    public TaskListMetaData getSelectedTaskList() {
-        return selectedTaskList;
+    public List<TaskListMetaData> getSelectedTaskLists() {
+        return selectedTaskLists;
     }
 
-    public void setSelectedTaskList(TaskListMetaData selectedTaskList) {
-        this.selectedTaskList = selectedTaskList;
+    public void setSelectedTaskLists(List<TaskListMetaData> selectedTaskLists) {
+        this.selectedTaskLists = selectedTaskLists;
     }
 
 }

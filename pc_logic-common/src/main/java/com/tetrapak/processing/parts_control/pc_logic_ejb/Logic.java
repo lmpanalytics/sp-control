@@ -23,8 +23,8 @@ public interface Logic {
 
     public String getMessage();
 
-    public void calculateInventory(TaskListMetaData taskListMetaData, LogicParameters logicParameters);
-    
+    public void calculateInventory(List<TaskListMetaData> taskListMetaData, LogicParameters logicParameters);
+
     public List<Inventory> processEvents(List<TaskListEvent> events);
 
     public Map<String, Inventory> getRecommendedMaterialMap();

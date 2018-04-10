@@ -64,11 +64,12 @@ public class LogicBeanTest {
     @Test
     @InSequence(2)
     public void testCalculateInventory() {
-
+        List<TaskListMetaData> listOfTaskListMetaData = new ArrayList<>();
         System.out.println("Test Calculate Inventory");
-        TaskListMetaData taskListMetaData = new TaskListMetaData("PC_100", "project2", "2", "2018-03-24", "SEPALMM");
+        listOfTaskListMetaData.add(
+                new TaskListMetaData("PC_100", "project2", "2", "2018-03-24", "SEPALMM"));
         LogicParameters logicParameters = new LogicParameters(0, 500, 0);
-        logicBean.calculateInventory(taskListMetaData, logicParameters);
+        logicBean.calculateInventory(listOfTaskListMetaData, logicParameters);
 
 //        Map<String, Inventory> map = logicBean.getRecommendedMaterialMap();
         Assert.assertTrue(logicBean.getRecommendedMaterialMap().containsKey("  90606-5824"));

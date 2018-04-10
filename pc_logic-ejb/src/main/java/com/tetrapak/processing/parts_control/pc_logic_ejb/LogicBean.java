@@ -77,16 +77,18 @@ public class LogicBean implements Logic, Serializable {
     /**
      * WIP: NOT FULLY IMPLEMENTED YET
      *
-     * Calculate recommended critical part to stock based on the range of
-     * service interval hours. Material numbers are given in BW format (if
-     * originating) from the GPL.
+     * Calculate recommended critical part to stock based on: (1) Range of
+     * service interval hours, (2) Combinations of service actions, and (3)
+     * Spare part families.
+     *
+     * Material numbers are given in BW format (if originating) from the GPL.
      *
      * @param taskListMetaData meta data from task lists e.g, Description,
      * UserID.
      * @param logicParameters logic parameters from jsf user inputs
      */
     @Override
-    public void calculateInventory(TaskListMetaData taskListMetaData, LogicParameters logicParameters) {
+    public void calculateInventory(List<TaskListMetaData> taskListMetaData, LogicParameters logicParameters) {
         recommendedMaterialMap.clear();
         List<Inventory> list = getMaterials(taskListMetaData, logicParameters);
         list.forEach((inv) -> {
@@ -99,7 +101,7 @@ public class LogicBean implements Logic, Serializable {
         }
     }
 
-    private List<Inventory> getMaterials(TaskListMetaData taskListMetaData, LogicParameters logicParameters) {
+    private List<Inventory> getMaterials(List<TaskListMetaData> taskListMetaData, LogicParameters logicParameters) {
         try (Session session = neo4jServiceBean.getDRIVER().session();) {
             return session.readTransaction(new TransactionWork<List<Inventory>>() {
                 @Override
@@ -110,26 +112,31 @@ public class LogicBean implements Logic, Serializable {
         }
     }
 
-    private List<Inventory> queryDB(Transaction tx, TaskListMetaData taskListMetaData, LogicParameters logicParameters) {
+    private List<Inventory> queryDB(Transaction tx, List<TaskListMetaData> taskListMetaData, LogicParameters logicParameters) {
 
         List<TaskListEvent> events = new ArrayList<>();
         List<Inventory> processedMaterials = new ArrayList<>();
         boolean exceptionFlag = true;
 
         try {
-            // Get Task list Meta data
-            String id = taskListMetaData.getId();
+            // Collect Task list IDs from Task list Meta data
+            List<String> listOfTaskListIDs
+                    = taskListMetaData.stream().map(t -> t.getId()).
+                            collect(Collectors.toList());
+//           Convert list of IDs to array
+            String[] tasklistIDs = new String[listOfTaskListIDs.size()];
+            listOfTaskListIDs.toArray(tasklistIDs);
 
             // Get Logic parameters
             int intervalLL = logicParameters.getactionIntervalLL();
             int intervalUL = logicParameters.getactionIntervalUL();
-//            Change id matching to be a collection of IDs
+
             StatementResult result = tx.run(
-                    "MATCH (m:PcMaterial)-[r:LISTED_IN ]->(t:TaskList {id:$id}) "
-                    + "WHERE r.actionInterval >= $intervalLL AND r.actionInterval <= $intervalUL "
+                    "MATCH (m:PcMaterial)-[r:LISTED_IN ]->(t:TaskList) "
+                    + "WHERE (r.actionInterval >= $intervalLL AND r.actionInterval <= $intervalUL) AND t.id IN $ids "
                     + "RETURN m.family AS family, t.action AS action, t.description AS description, m.materialNumber AS materialNumber, m.denomination AS denomination, r.quantity AS quantity, t.functionalArea AS functionalArea;",
                     Values.parameters(
-                            "id", id,
+                            "ids", tasklistIDs,
                             "intervalLL", intervalLL,
                             "intervalUL", intervalUL
                     ));
@@ -163,7 +170,9 @@ public class LogicBean implements Logic, Serializable {
     }
 
     /**
-     * Process Task list events and Materials according to logic rules.
+     * Process Task list events and Materials according to logic rules based on:
+     * (1) Range of service interval hours, (2) Combinations of service actions,
+     * and (3) Spare part families.
      *
      * @param events
      * @return inventory list of materials to stock
@@ -240,7 +249,7 @@ public class LogicBean implements Logic, Serializable {
                     } else {
 //                        System.out.printf("No stock: %s, %s, %s, %s%n", tle.getFamily(), tle.getSparePartNo(), tle.getQty(), tle.getAction());
                     }
-// **************************** APPLY LOGIC ENDS ******************************* 
+// ******************************* LOGIC ENDS ********************************** 
                 });
             });
         });

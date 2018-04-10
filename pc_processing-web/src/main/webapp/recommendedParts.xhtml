@@ -147,11 +147,11 @@
 
                     <h:form id="dataTables">
 
-                        <p:dataTable id="taskListsTable" var="var" value="#{taskListViewBean.taskLists}" selection="#{taskListViewBean.selectedTaskList}" rowKey="#{var.id}" resizableColumns="true" scrollable="true" scrollHeight="150" >
+                        <p:dataTable id="taskListsTable" var="var" value="#{taskListViewBean.taskLists}" selection="#{taskListViewBean.selectedTaskLists}" rowKey="#{var.id}" resizableColumns="true" scrollable="true" scrollHeight="150" >
                             <f:facet name="header">
                                 TASK LISTS (F5 TO REFRESH)
                             </f:facet>
-                            <p:column selectionMode="single" style="width:16px;text-align:center"/>
+                            <p:column selectionMode="multiple" style="width:16px;text-align:center"/>
                             <p:column headerText="ID" sortBy="#{var.id}">
                                 <h:outputText value="#{var.id}" />
                             </p:column>
