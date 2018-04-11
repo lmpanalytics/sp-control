@@ -134,7 +134,7 @@ public class LogicBean implements Logic, Serializable {
             StatementResult result = tx.run(
                     "MATCH (m:PcMaterial)-[r:LISTED_IN ]->(t:TaskList) "
                     + "WHERE (r.actionInterval >= $intervalLL AND r.actionInterval <= $intervalUL) AND t.id IN $ids "
-                    + "RETURN m.family AS family, t.action AS action, t.description AS description, m.materialNumber AS materialNumber, m.denomination AS denomination, r.quantity AS quantity, t.functionalArea AS functionalArea;",
+                    + "RETURN m.family AS family, r.action AS action, t.description AS tDescription, m.materialNumber AS materialNumber, m.description AS mDescription, r.quantity AS quantity, t.functionalArea AS functionalArea;",
                     Values.parameters(
                             "ids", tasklistIDs,
                             "intervalLL", intervalLL,
@@ -144,14 +144,14 @@ public class LogicBean implements Logic, Serializable {
                 Record next = result.next();
 
                 String family = next.get("family").asString();
-                String tAction = next.get("action").asString();
-                String tDescription = next.get("description").asString();
+                String rAction = next.get("action").asString();
+                String tDescription = next.get("tDescription").asString();
                 String mMaterialNumber = next.get("materialNumber").asString();
-                String mDenomination = next.get("denomination").asString();
+                String mDenomination = next.get("mDescription").asString();
                 int rQuantity = next.get("quantity").asInt();
                 String tFunctionalArea = next.get("functionalArea").asString();
 
-                events.add(new TaskListEvent(family, tAction, tDescription, mMaterialNumber, mDenomination, rQuantity, tFunctionalArea));
+                events.add(new TaskListEvent(family, rAction, tDescription, mMaterialNumber, mDenomination, rQuantity, tFunctionalArea));
             }
             exceptionFlag = false;
 

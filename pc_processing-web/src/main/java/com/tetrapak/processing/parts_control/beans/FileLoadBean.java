@@ -50,12 +50,13 @@ import org.slf4j.LoggerFactory;
  * See example here:
  * https://www.mkyong.com/java/apache-poi-reading-and-writing-excel-file-in-java/
  *
- * Import starts from row two in the first sheet in the Excel book. Order of
- * columns are important and all quantities must be integers. Additional columns
- * can be added by the user in the Excel sheet to the right of the last column
- * i.e., after column 3 in the Inventory file, after column 3 in the Purchase
- * file, and after column 18 in the Task list file. Such user added columns will
- * be ignored during file upload.
+ * Import starts from row two in the first sheet in the Excel book, except for
+ * Task-lists where import is filtered on action type. Order of columns are
+ * important and all quantities must be integers. Additional columns can be
+ * added by the user in the Excel sheet to the right of the last column i.e.,
+ * after column 3 in the Inventory file, after column 3 in the Purchase file,
+ * and after column 15 in the Task list file. Such user added columns will be
+ * ignored during file upload.
  *
  * The file reader handles blank rows and cells.
  *
@@ -262,14 +263,14 @@ public class FileLoadBean implements Serializable {
     }
 
     /**
-     * Reads an Excel file, based on Task List data from SSPt
+     * Reads an Excel file, based on Task List(s) formatted acc. to TPPS20057
      *
      */
     private Map<Integer, TaskList> readTaskListFile() {
         Map<Integer, TaskList> m = new HashMap<>();
 
         try {
-            int MY_MINIMUM_COLUMN_COUNT = 17;
+            int MY_MINIMUM_COLUMN_COUNT = 14;
 
             Workbook workbook = new XSSFWorkbook(excelFile);
             Sheet sheet = workbook.getSheetAt(0);
@@ -282,7 +283,6 @@ public class FileLoadBean implements Serializable {
                 Row r = sheet.getRow(rowNum);
 
                 // Initiate at each new row 
-                int machineNumber = 0;
                 String label = "";
                 String classItem = "";
                 String articleNo = "";
@@ -295,7 +295,7 @@ public class FileLoadBean implements Serializable {
                 sparePartNo = "";
                 String spDenomination = "";
                 int qty = 0;
-                String functionalArea = "";
+//                String functionalArea = "";
 
                 if (r == null) {
                     // This whole row is empty
@@ -348,9 +348,9 @@ public class FileLoadBean implements Serializable {
                                 case 12:
                                     spDenomination = s;
                                     break;
-                                case 17:
-                                    functionalArea = s;
-                                    break;
+//                                case 17:
+//                                    functionalArea = s;
+//                                    break;
                                 default:
                                     break;
                             }
@@ -359,9 +359,6 @@ public class FileLoadBean implements Serializable {
                             Double d = c.getNumericCellValue();
 //                        System.out.print(d + " I'm a number ");
                             switch (cn) {
-                                case 0:
-                                    machineNumber = d.intValue();
-                                    break;
                                 case 1:
                                     label = String.valueOf(d.intValue()).replaceAll("[\n\r]", "");
                                     break;
@@ -392,11 +389,14 @@ public class FileLoadBean implements Serializable {
                     }
                 }
 
-                //   Put to map starting from row 2 in the Excel sheet (idx 1)
-                if (rowNum != Integer.MAX_VALUE && rowNum >= 1) {
+//   Start from row 2 in the Excel sheet (idx 1), filter on action, put to map.
+                if (rowNum != Integer.MAX_VALUE && rowNum >= 1
+                        && (action.equalsIgnoreCase("check")
+                        || action.equalsIgnoreCase("change")
+                        || action.equalsIgnoreCase("turn"))) {
                     fixBWmatching();
-//                    System.out.printf("Task List file row: %s\t { %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s }", rowNum, machineNumber, label, classItem, articleNo, eqDenomination, type, docNo, interval, action, description, sparePartNo, spDenomination, qty, functionalArea);
-                    m.put(rowNum, new TaskList(machineNumber, label, classItem, articleNo, eqDenomination, type, docNo, interval, action, description, sparePartNo, spDenomination, qty, functionalArea));
+//                    System.out.printf("Task List file row: %s\t { %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s\t, %s}", rowNum, label, classItem, articleNo, eqDenomination, type, docNo, interval, action, description, sparePartNo, spDenomination, qty);
+                    m.put(rowNum, new TaskList(label, classItem, articleNo, eqDenomination, type, docNo, interval, action, description, sparePartNo, spDenomination, qty));
                 }
 
             }
@@ -469,8 +469,8 @@ public class FileLoadBean implements Serializable {
             taskListExceptionFlag2 = true;
 
             String prefix = "PC_";
-            // user input
-            String customerNumber = prefix + "100";
+            // user input           
+            String customerNumber = prefix + Long.toString(System.currentTimeMillis());
             String description = "project2";
             String version = "2";
 
@@ -516,8 +516,7 @@ public class FileLoadBean implements Serializable {
                 taskListMap.values().stream().forEach((v) -> {
                     String materialNumber = v.getSparePartNo();
                     int quantity = v.getQty();
-                    String functionalArea = v.getFunctionalArea();
-                    int machineNumberSSPt = v.getMachineNumber();
+//                    String functionalArea = v.getFunctionalArea();
                     int actionInterval = v.getInterval();
                     String action = v.getAction();
                     tx.run("MATCH (m:PcMaterial) "
@@ -525,15 +524,13 @@ public class FileLoadBean implements Serializable {
                             + "MATCH (t:TaskList) WHERE t.id = $id "
                             + "CREATE (m)-[r:LISTED_IN]->(t) "
                             + "SET r.quantity = $qty "
-                            + "SET r.functionalArea = $functionalArea "
-                            + "SET r.machineNumberSSPt = $machineNumberSSPt "
+                            //                            + "SET r.functionalArea = $functionalArea "
                             + "SET r.actionInterval = $actionInterval "
                             + "SET r.action = $action;",
                             parameters("id", customerNumber,
                                     "materialNumber_id", materialNumber,
                                     "qty", quantity,
-                                    "functionalArea", functionalArea,
-                                    "machineNumberSSPt", machineNumberSSPt,
+                                    //                                    "functionalArea", functionalArea,
                                     "actionInterval", actionInterval,
                                     "action", action));
                     tx.success();  // Mark this write as successful.
