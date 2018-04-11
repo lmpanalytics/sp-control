@@ -58,6 +58,7 @@ public class MaterialResultViewBean implements Serializable {
      * Make a list of Recommended Materials
      */
     public void processRecommendedParts() {
+        recommendedPartsList.clear();
         List<TaskListMetaData> metaData = taskListViewBean.getSelectedTaskLists();
         LogicParameters parameters = logicParametersViewBean.getLogicParameters();
 

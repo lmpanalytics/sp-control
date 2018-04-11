@@ -179,6 +179,7 @@ public class LogicBean implements Logic, Serializable {
      */
     @Override
     public List<Inventory> processEvents(List<TaskListEvent> events) {
+        skuMap.clear();
 
 // **************************** PRE-PROCESSING ********************************
 //       Filter action types and fix natural language ordering of actions
