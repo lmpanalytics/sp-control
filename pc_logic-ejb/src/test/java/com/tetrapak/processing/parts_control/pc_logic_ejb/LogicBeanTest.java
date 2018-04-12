@@ -26,7 +26,6 @@ import org.jboss.shrinkwrap.api.asset.EmptyAsset;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -60,19 +59,17 @@ public class LogicBeanTest {
     /**
      * Test of calculateInventory method, of class LogicBean.
      */
-    @Ignore("Not ready to test yet")
     @Test
     @InSequence(2)
     public void testCalculateInventory() {
         List<TaskListMetaData> listOfTaskListMetaData = new ArrayList<>();
         System.out.println("Test Calculate Inventory");
         listOfTaskListMetaData.add(
-                new TaskListMetaData("PC_100", "project2", "2", "2018-03-24", "SEPALMM"));
-        LogicParameters logicParameters = new LogicParameters(0, 500, 0);
+                new TaskListMetaData("TEST", "project2", "2", "2018-03-24", "SEPALMM"));
+        LogicParameters logicParameters = new LogicParameters(0, 4000, 0);
         logicBean.calculateInventory(listOfTaskListMetaData, logicParameters);
 
-//        Map<String, Inventory> map = logicBean.getRecommendedMaterialMap();
-        Assert.assertTrue(logicBean.getRecommendedMaterialMap().containsKey("  90606-5824"));
+        Assert.assertTrue(logicBean.getRecommendedMaterialMap().containsKey("6-4722 9353 02"));
     }
 
     @Test

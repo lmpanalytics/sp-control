@@ -194,7 +194,7 @@ public class LogicBean implements Logic, Serializable {
                 e.setAction(Action.C_CHANGE.toString());
             }
         });
-
+        
         Comparator<TaskListEvent> taskListEventComparator
                 = Comparator.comparing(TaskListEvent::getFamily)
                         .thenComparing(TaskListEvent::getSparePartNo)
