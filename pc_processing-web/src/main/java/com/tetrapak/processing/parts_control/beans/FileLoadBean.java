@@ -18,9 +18,12 @@ import javax.inject.Named;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Set;
+import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.enterprise.context.RequestScoped;
@@ -75,12 +78,13 @@ public class FileLoadBean implements Serializable {
     private static final Logger LOGGER = LoggerFactory.getLogger(FileLoadBean.class);
     private Map<String, PartNumbers> globalPartNumberMap;
     private static FileInputStream excelFile;
-    private int relationShipCounter;
+    private int counter;
     private boolean taskListExceptionFlag1;
     private boolean taskListExceptionFlag2;
     private boolean partNumberExceptionFlag;
     private String sparePartNo;
     private boolean foundIt;
+    private boolean gapExceptionFlag;
 
     /**
      * Creates a new instance of FileLoadBean
@@ -263,8 +267,11 @@ public class FileLoadBean implements Serializable {
     }
 
     /**
-     * Reads an Excel file, based on Task List(s) formatted acc. to TPPS20057
+     * Reads an Excel file, based on Task List(s) formatted acc. to TPPS20057.
+     * Returns all valid PMR actions, attempting BW formatted number
+     * conversions.
      *
+     * @return map of row numbers and Task list instances
      */
     private Map<Integer, TaskList> readTaskListFile() {
         Map<Integer, TaskList> m = new HashMap<>();
@@ -360,22 +367,22 @@ public class FileLoadBean implements Serializable {
 //                        System.out.print(d + " I'm a number ");
                             switch (cn) {
                                 case 1:
-                                    label = String.valueOf(d.intValue()).replaceAll("[\n\r]", "");
+                                    label = String.valueOf(d.longValue()).replaceAll("[\n\r]", "");
                                     break;
                                 case 2:
-                                    classItem = String.valueOf(d.intValue()).replaceAll("[\n\r]", "");
+                                    classItem = String.valueOf(d.longValue()).replaceAll("[\n\r]", "");
                                     break;
                                 case 3:
-                                    articleNo = String.valueOf(d.intValue()).replaceAll("[\n\r]", "");
+                                    articleNo = String.valueOf(d.longValue()).replaceAll("[\n\r]", "");
                                     break;
                                 case 6:
-                                    docNo = String.valueOf(d.intValue()).replaceAll("[\n\r]", "");
+                                    docNo = String.valueOf(d.longValue()).replaceAll("[\n\r]", "");
                                     break;
                                 case 8:
                                     interval = d.intValue();
                                     break;
                                 case 11:
-                                    sparePartNo = String.valueOf(d.intValue()).replaceAll("[\n\r]", "");
+                                    sparePartNo = String.valueOf(d.longValue()).replaceAll("[\n\r]", "");
                                     break;
                                 case 13:
                                     qty = d.intValue();
@@ -511,7 +518,7 @@ public class FileLoadBean implements Serializable {
 
             // 2. Create Material to TaskList relationships:
             try (Transaction tx = session.beginTransaction()) {
-                relationShipCounter = 0;
+                counter = 0;
 
                 taskListMap.values().stream().forEach((v) -> {
                     String materialNumber = v.getSparePartNo();
@@ -534,7 +541,7 @@ public class FileLoadBean implements Serializable {
                                     "actionInterval", actionInterval,
                                     "action", action));
                     tx.success();  // Mark this write as successful.
-                    relationShipCounter++;
+                    counter++;
                     taskListExceptionFlag2 = false;
                 });
 
@@ -544,10 +551,11 @@ public class FileLoadBean implements Serializable {
             }
 
             if (!taskListExceptionFlag1) {
-                LOGGER.info("Succesfully created TaskList node {}." /*, compositeKey */);
+                LOGGER.info("Succesfully created TaskList node {}.", customerNumber);
             }
             if (!taskListExceptionFlag2) {
-                LOGGER.info("Succesfully created {} Material to TaskList relationship(s).", relationShipCounter);
+                LOGGER.info("Attempted {} Material to TaskList relationship(s).", counter);
+                listMissingMaterials(customerNumber, taskListMap);
             }
 
         } catch (Exception e) {
@@ -591,6 +599,49 @@ public class FileLoadBean implements Serializable {
             LOGGER.info("Succesfully collected part numbers from {} materials to map.", materialCounter);
         }
 
+    }
+
+    /**
+     * Compare the task list material numbers with the created relationships as
+     * to establish the gap of materials that are neither in GPL nor invoiced in
+     * last 36 months, and nor having convertible material numbers. These
+     * materials could be third party materials to be added manually to the list
+     * of recommended parts.
+     */
+    private void listMissingMaterials(String taskListID, Map<Integer, TaskList> taskListMap) {
+        Set<String> qualifiedMtrlNoSet = new HashSet<>();
+        Set<String> taskListNumbersSet = new HashSet<>();
+        // Sessions are lightweight and disposable connection wrappers.
+        try (Session session = neo.getDRIVER().session()) {
+            String tx = "MATCH (:TaskList {id:$id})-[:LISTED_IN]-(m:PcMaterial) return m.materialNumber AS qualifiedMtrlNumbers;";
+
+            StatementResult result = session.run(tx, parameters("id", taskListID));
+            gapExceptionFlag = false;
+            while (result.hasNext()) {
+                Record next = result.next();
+
+                String qualifiedMtrlNumbersBW = next.get("qualifiedMtrlNumbers").asString();
+
+                // Add to qualified material number set
+                qualifiedMtrlNoSet.add(qualifiedMtrlNumbersBW);
+
+            }
+
+            if (!taskListMap.isEmpty()) {
+                taskListNumbersSet = taskListMap.values().stream().map(t -> t.getSparePartNo()).collect(Collectors.toSet());
+            }
+
+        } catch (Exception e) {
+            LOGGER.error("Exception in listMissingMaterials: {}", e.getMessage());
+            gapExceptionFlag = true;
+        }
+        if (!gapExceptionFlag) {
+            LOGGER.info("Succesfully establised gap between {} stored materials and {} parts in task list.", qualifiedMtrlNoSet.size(), taskListNumbersSet.size());
+            taskListNumbersSet.removeAll(qualifiedMtrlNoSet);
+            taskListNumbersSet.stream().sorted().forEach(t -> {
+                System.out.printf("Task list material number '%s' doesn't exist in material DB.%n", t);
+            });
+        }
     }
 
     @PreDestroy
