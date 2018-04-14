@@ -174,7 +174,7 @@
                         </p:dataTable>
 
                         <p></p> 
-                        <p:commandButton update="recommendedPartsTable footerForm:logOutput" icon="ui-icon-check" value="CALCULATE PARTS" action="#{materialResultViewBean.processRecommendedParts()}" />
+                        <p:commandButton update="recommendedPartsTable excludedPartsTable footerForm:logOutput" icon="ui-icon-check" value="CALCULATE PARTS" action="#{materialResultViewBean.processRecommendedParts()}" />
                         <p></p> 
 
                         <p:dataTable id="recommendedPartsTable" var="var" value="#{materialResultViewBean.recommendedPartsList}" resizableColumns="true" scrollable="true" scrollHeight="150" >
@@ -198,6 +198,24 @@
 
                         <p:commandButton value="Export as csv" ajax="false">
                             <p:dataExporter type="csv" target="recommendedPartsTable" fileName="recommendedPartsTable"/>
+                        </p:commandButton>                       
+                        <p></p> 
+
+                        <p:dataTable id="excludedPartsTable" var="var" value="#{materialResultViewBean.excludedPartsList}" resizableColumns="true" scrollable="true" scrollHeight="150" >
+                            <f:facet name="header">
+                                EXCLUDED VOID PARTS
+                            </f:facet>
+                            <p:column headerText="MTRL NUMBER" sortBy="#{var.material}">
+                                <h:outputText value="#{var.material}" />
+                            </p:column>
+
+                            <p:column headerText="DESCRIPTION" sortBy="#{var.description}">
+                                <h:outputText value="#{var.description}" />
+                            </p:column>
+                        </p:dataTable>
+
+                        <p:commandButton value="Export as csv" ajax="false">
+                            <p:dataExporter type="csv" target="excludedPartsTable" fileName="excludedPartsTable"/>
                         </p:commandButton>
 
                     </h:form> 

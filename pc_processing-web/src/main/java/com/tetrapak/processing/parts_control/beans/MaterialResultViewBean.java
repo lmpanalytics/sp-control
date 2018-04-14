@@ -39,6 +39,7 @@ public class MaterialResultViewBean implements Serializable {
 
     private static final long serialVersionUID = 1L;
     private List<Inventory> recommendedPartsList;
+    private List<Inventory> excludedPartsList;
 
     /**
      * Creates a new instance of MaterialResultViewBean
@@ -52,19 +53,24 @@ public class MaterialResultViewBean implements Serializable {
 
         // Initiate Recommended parts list
         recommendedPartsList = new ArrayList<>();
+        excludedPartsList = new ArrayList<>();
     }
 
     /**
-     * Make a list of Recommended Materials
+     * Make lists of Recommended Materials as SKUs, and Excluded Materials, i.e.
+     * materials neither in GPL nor sold through PSC in last 36 months.
      */
     public void processRecommendedParts() {
         recommendedPartsList.clear();
+        excludedPartsList.clear();
+
         List<TaskListMetaData> metaData = taskListViewBean.getSelectedTaskLists();
         LogicParameters parameters = logicParametersViewBean.getLogicParameters();
 
         logicBean.calculateInventory(metaData, parameters);
 
         recommendedPartsList = new ArrayList<>(logicBean.getRecommendedMaterialMap().values());
+        excludedPartsList = new ArrayList<>(logicBean.getNonSKUmap().values());
     }
 
     public List<Inventory> getRecommendedPartsList() {
@@ -73,6 +79,14 @@ public class MaterialResultViewBean implements Serializable {
 
     public void setRecommendedPartsList(List<Inventory> recommendedPartsList) {
         this.recommendedPartsList = recommendedPartsList;
+    }
+
+    public List<Inventory> getExcludedPartsList() {
+        return excludedPartsList;
+    }
+
+    public void setExcludedPartsList(List<Inventory> excludedPartsList) {
+        this.excludedPartsList = excludedPartsList;
     }
 
 }
