@@ -70,6 +70,10 @@ public class LogicBeanTest {
         logicBean.calculateInventory(listOfTaskListMetaData, logicParameters);
 
         Assert.assertTrue(logicBean.getRecommendedMaterialMap().containsKey("6-4722 9353 02"));
+
+        String excludedMtrl = "6-4722 0942 02";
+        int excludedKey = excludedMtrl.hashCode();
+        Assert.assertTrue(logicBean.getNonSKUmap().containsKey(excludedKey));
     }
 
     @Test

@@ -166,10 +166,10 @@ public class LogicBean implements Logic, Serializable {
             // Processing of materials according to logic rules
             processedMaterialList = processEvents(events);
 
-            // Materials neither in GPL nor sold through PSC in last 36 months
-            List<Inventory> missingMtrlList = nonSKUmap.values().stream().collect(Collectors.toList());
+            // Materials excluded by logic
+            List<Inventory> excludedMtrlList = nonSKUmap.values().stream().collect(Collectors.toList());
 
-            writeToTerminal(missingMtrlList, processedMaterialList);
+            writeToTerminal(excludedMtrlList, processedMaterialList);
 
         }
         return processedMaterialList;
@@ -281,23 +281,29 @@ public class LogicBean implements Logic, Serializable {
         );
     }
 
-    private void writeToTerminal(List<Inventory> missingMtrlList, List<Inventory> processedMaterialList) {
+    private void writeToTerminal(List<Inventory> excludedMtrlList, List<Inventory> processedMaterialList) {
         LocalTime time = LocalDateTime.now().toLocalTime();
 
-        if (missingMtrlList.isEmpty()) {
+        if (excludedMtrlList.isEmpty()) {
             LOGGER.info("Recommended {} material(s) to stock.",
                     processedMaterialList.size());
             message = message + time + ": Recommended "
                     + processedMaterialList.size() + " material(s) to stock.\n";
 
-        } else if (!missingMtrlList.isEmpty()) {
-            LOGGER.info("Recommended {} material(s) to stock. WARNING: Excluded {} material(s) as neither in GPL nor invoiced in last 36 months.",
-                    processedMaterialList.size(), missingMtrlList.size());
+        } else if (!excludedMtrlList.isEmpty()) {
+            LOGGER.info("Recommended {} material(s) to stock. INFO: Logic excluded {} material(s) within the interval range.",
+                    //            LOGGER.info("Recommended {} material(s) to stock. WARNING: {} missing material(s) as neither in GPL nor invoiced in last 36 months.",
+                    processedMaterialList.size(), excludedMtrlList.size());
             message = message + time + ": Recommended "
                     + processedMaterialList.size()
+                    + " material(s) to stock. INFO: Logic excluded "
+                    + excludedMtrlList.size()
+                    + " material(s) within the interval range.\n";
+            /* message = message + time + ": Recommended "
+                    + processedMaterialList.size()
                     + " material(s) to stock. WARNING: Excluded "
-                    + missingMtrlList.size()
-                    + " material(s) as neither in GPL nor invoiced in last 36 months.\n";
+                    + excludedMtrlList.size()
+                    + " material(s) as neither in GPL nor invoiced in last 36 months.\n";*/
         }
     }
 
@@ -321,7 +327,7 @@ public class LogicBean implements Logic, Serializable {
     }
 
     /**
-     * Gets the map of excluded materials
+     * Gets map of excluded materials as filtered out by logic
      *
      * @return excluded materials
      */
