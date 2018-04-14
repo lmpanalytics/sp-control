@@ -47,6 +47,8 @@ public class LogicBean implements Logic, Serializable {
     private static final Logger LOGGER = LoggerFactory.getLogger(LogicBean.class);
     private Map<String, Inventory> recommendedMaterialMap;
     private Map<Integer, Inventory> skuMap;
+    private Map<Integer, Inventory> nonSKUmap;
+
     private String message;
     private boolean is_SKU;
     private int sumMtrlQty;
@@ -62,6 +64,7 @@ public class LogicBean implements Logic, Serializable {
         // Initialize maps
         recommendedMaterialMap = new HashMap<>();
         skuMap = new HashMap<>();
+        nonSKUmap = new HashMap<>();
 
         // Initialize message
         message = "";
@@ -115,7 +118,7 @@ public class LogicBean implements Logic, Serializable {
     private List<Inventory> queryDB(Transaction tx, List<TaskListMetaData> taskListMetaData, LogicParameters logicParameters) {
 
         List<TaskListEvent> events = new ArrayList<>();
-        List<Inventory> processedMaterials = new ArrayList<>();
+        List<Inventory> processedMaterialList = new ArrayList<>();
         boolean exceptionFlag = true;
 
         try {
@@ -161,12 +164,15 @@ public class LogicBean implements Logic, Serializable {
         }
         if (!exceptionFlag) {
             // Processing of materials according to logic rules
-            processedMaterials = processEvents(events);
-            LOGGER.info("Recommended {} material(s) to stock.", processedMaterials.size());
-            LocalTime time = LocalDateTime.now().toLocalTime();
-            message = message + time + ": Recommended " + processedMaterials.size() + " material(s) to stock.\n";
+            processedMaterialList = processEvents(events);
+
+            // Materials neither in GPL nor sold through PSC in last 36 months
+            List<Inventory> missingMtrlList = nonSKUmap.values().stream().collect(Collectors.toList());
+
+            writeToTerminal(missingMtrlList, processedMaterialList);
+
         }
-        return processedMaterials;
+        return processedMaterialList;
     }
 
     /**
@@ -180,6 +186,7 @@ public class LogicBean implements Logic, Serializable {
     @Override
     public List<Inventory> processEvents(List<TaskListEvent> events) {
         skuMap.clear();
+        nonSKUmap.clear();
 
 // **************************** PRE-PROCESSING ********************************
 //       Filter action types and fix natural language ordering of actions
@@ -194,7 +201,7 @@ public class LogicBean implements Logic, Serializable {
                 e.setAction(Action.C_CHANGE.toString());
             }
         });
-        
+
         Comparator<TaskListEvent> taskListEventComparator
                 = Comparator.comparing(TaskListEvent::getFamily)
                         .thenComparing(TaskListEvent::getSparePartNo)
@@ -249,6 +256,11 @@ public class LogicBean implements Logic, Serializable {
 //                        System.out.printf("Stock: %s, %s, %s, %s%n", tle.getFamily(), tle.getSparePartNo(), tle.getQty(), tle.getAction());
                     } else {
 //                        System.out.printf("No stock: %s, %s, %s, %s%n", tle.getFamily(), tle.getSparePartNo(), tle.getQty(), tle.getAction());
+                        int key = tle.getSparePartNo().hashCode();
+                        nonSKUmap.put(key, new Inventory(
+                                tle.getSparePartNo(),
+                                tle.getSpDenomination(),
+                                0));
                     }
 // ******************************* LOGIC ENDS ********************************** 
                 });
@@ -269,6 +281,26 @@ public class LogicBean implements Logic, Serializable {
         );
     }
 
+    private void writeToTerminal(List<Inventory> missingMtrlList, List<Inventory> processedMaterialList) {
+        LocalTime time = LocalDateTime.now().toLocalTime();
+
+        if (missingMtrlList.isEmpty()) {
+            LOGGER.info("Recommended {} material(s) to stock.",
+                    processedMaterialList.size());
+            message = message + time + ": Recommended "
+                    + processedMaterialList.size() + " material(s) to stock.\n";
+
+        } else if (!missingMtrlList.isEmpty()) {
+            LOGGER.info("Recommended {} material(s) to stock. WARNING: Excluded {} material(s) as neither in GPL nor invoiced in last 36 months.",
+                    processedMaterialList.size(), missingMtrlList.size());
+            message = message + time + ": Recommended "
+                    + processedMaterialList.size()
+                    + " material(s) to stock. WARNING: Excluded "
+                    + missingMtrlList.size()
+                    + " material(s) as neither in GPL nor invoiced in last 36 months.\n";
+        }
+    }
+
     @PreDestroy
     public void destroyMe() {
         try {
@@ -286,6 +318,21 @@ public class LogicBean implements Logic, Serializable {
     @Override
     public void setRecommendedMaterialMap(Map<String, Inventory> materialMap) {
         this.recommendedMaterialMap = recommendedMaterialMap;
+    }
+
+    /**
+     * Gets the map of excluded materials
+     *
+     * @return excluded materials
+     */
+    @Override
+    public Map<Integer, Inventory> getNonSKUmap() {
+        return nonSKUmap;
+    }
+
+    @Override
+    public void setNonSKUmap(Map<Integer, Inventory> nonSKUmap) {
+        this.nonSKUmap = nonSKUmap;
     }
 
 }

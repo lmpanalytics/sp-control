@@ -31,4 +31,8 @@ public interface Logic {
 
     public void setRecommendedMaterialMap(Map<String, Inventory> materialMap);
 
+    public Map<Integer, Inventory> getNonSKUmap();
+
+    public void setNonSKUmap(Map<Integer, Inventory> nonSKUmap);
+
 }
