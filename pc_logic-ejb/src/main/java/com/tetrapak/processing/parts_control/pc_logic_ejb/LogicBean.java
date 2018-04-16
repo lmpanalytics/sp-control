@@ -238,8 +238,13 @@ public class LogicBean implements Logic, Serializable {
 
 // ************************** APPLY LOGIC BEGINS *******************************
 //                        Calculate quantity to stock
-                        if (tle.getFamily().equals("Piston")
-                                || tle.getFamily().equals("Piston seal")) {
+                        if (tle.getFamily().equalsIgnoreCase("Piston")
+                                || tle.getFamily().equalsIgnoreCase("Piston seal")
+                                || tle.getFamily().equalsIgnoreCase("Compression ring")
+                                || tle.getFamily().equalsIgnoreCase("Support ring")
+                                || tle.getFamily().equalsIgnoreCase("Guide band")
+                                || tle.getFamily().equalsIgnoreCase("V-Belt")
+                                || tle.getFamily().equalsIgnoreCase("Bellow")) {
                             if (sumMtrlQty % 3 == 0) {
 //                                3-Piston Homogenizer
                                 putToSKUmap(key, tle, 3);
