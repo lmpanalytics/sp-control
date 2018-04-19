@@ -17,9 +17,11 @@ import java.io.IOException;
 import javax.inject.Named;
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -85,6 +87,7 @@ public class FileLoadBean implements Serializable {
     private String sparePartNo;
     private boolean foundIt;
     private boolean gapExceptionFlag;
+    private List<String> unknownMaterialsList;
 
     /**
      * Creates a new instance of FileLoadBean
@@ -98,6 +101,9 @@ public class FileLoadBean implements Serializable {
         // Initialize globalPartNumberMap
         globalPartNumberMap = new HashMap<>();
         foundIt = false;
+
+        // Initiate unknown materials list
+        unknownMaterialsList = new ArrayList<>();
 //        System.out.println("I'm in FileLoadBean init() method");
     }
 
@@ -555,7 +561,7 @@ public class FileLoadBean implements Serializable {
             }
             if (!taskListExceptionFlag2) {
                 LOGGER.info("Attempted {} Material to TaskList relationship(s).", counter);
-                listMissingMaterials(customerNumber, taskListMap);
+                listUnknownMaterials(customerNumber, taskListMap);
             }
 
         } catch (Exception e) {
@@ -608,7 +614,7 @@ public class FileLoadBean implements Serializable {
      * materials could be third party materials to be added manually to the list
      * of recommended parts.
      */
-    private void listMissingMaterials(String taskListID, Map<Integer, TaskList> taskListMap) {
+    private void listUnknownMaterials(String taskListID, Map<Integer, TaskList> taskListMap) {
         Set<String> qualifiedMtrlNoSet = new HashSet<>();
         Set<String> taskListNumbersSet = new HashSet<>();
         // Sessions are lightweight and disposable connection wrappers.
@@ -637,11 +643,21 @@ public class FileLoadBean implements Serializable {
         }
         if (!gapExceptionFlag) {
             LOGGER.info("Succesfully establised gap between {} stored materials and {} parts in task list.", qualifiedMtrlNoSet.size(), taskListNumbersSet.size());
+            unknownMaterialsList.clear();
             taskListNumbersSet.removeAll(qualifiedMtrlNoSet);
             taskListNumbersSet.stream().sorted().forEach(t -> {
-                System.out.printf("Task list material number '%s' doesn't exist in material DB.%n", t);
+                unknownMaterialsList.add(t);
+//                System.out.printf("Task list material number '%s' doesn't exist in material DB.%n", t);
             });
         }
+    }
+
+    public List<String> getUnknownMaterialsList() {
+        return unknownMaterialsList;
+    }
+
+    public void setUnknownMaterialsList(List<String> unknownMaterialsList) {
+        this.unknownMaterialsList = unknownMaterialsList;
     }
 
     @PreDestroy
