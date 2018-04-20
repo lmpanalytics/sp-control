@@ -15,8 +15,8 @@ import com.tetrapak.processing.parts_control.pc_neo4j_service_ejb.Neo4jService;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import javax.inject.Named;
 import java.io.Serializable;
+import javax.inject.Named;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -74,6 +74,9 @@ public class FileLoadBean implements Serializable {
 
     @Inject
     private Neo4jService neo;
+
+    @Inject
+    private UnknownMaterialsViewBean unknownMaterialsViewBean;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FileLoadBean.class);
     private Map<String, PartNumbers> globalPartNumberMap;
@@ -135,6 +138,7 @@ public class FileLoadBean implements Serializable {
                         collectPartNumbersFromDB();
                         Map<Integer, TaskList> taskListMap = readTaskListFile();
                         addTaskList(taskListMap);
+                        unknownMaterialsViewBean.processUnknownMaterials();
                         break;
                     default:
                         break;
@@ -611,9 +615,7 @@ public class FileLoadBean implements Serializable {
      * of recommended parts.
      */
     private void listUnknownMaterials(String taskListID, Map<Integer, TaskList> taskListMap) {
-//        Set<ImportMaterial> qualifiedMtrlNoSet = new HashSet<>();
         Map<String, ImportMaterial> qualifiedMtrlNoMap = new HashMap<>();
-//        Set<ImportMaterial> taskListNumbersSet = new HashSet<>();
         Map<String, ImportMaterial> taskListNumbersMap = new HashMap<>();
 
         // Sessions are lightweight and disposable connection wrappers.
