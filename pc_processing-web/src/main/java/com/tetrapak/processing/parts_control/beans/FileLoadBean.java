@@ -9,6 +9,7 @@ import static com.tetrapak.processing.parts_control.beans.Utilities.removeNonDig
 import com.tetrapak.processing.parts_control.models.PartNumbers;
 import com.tetrapak.processing.parts_control.models.TaskList;
 import com.tetrapak.processing.parts_control.models.Purchases;
+import com.tetrapak.processing.parts_control.models.ImportMaterial;
 import com.tetrapak.processing.parts_control.pc_models.Inventory;
 import com.tetrapak.processing.parts_control.pc_neo4j_service_ejb.Neo4jService;
 import java.io.FileInputStream;
@@ -19,13 +20,10 @@ import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Set;
-import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.enterprise.context.RequestScoped;
@@ -87,7 +85,7 @@ public class FileLoadBean implements Serializable {
     private String sparePartNo;
     private boolean foundIt;
     private boolean gapExceptionFlag;
-    private List<String> unknownMaterialsList;
+    private List<ImportMaterial> unknownMaterialsList;
 
     /**
      * Creates a new instance of FileLoadBean
@@ -537,13 +535,11 @@ public class FileLoadBean implements Serializable {
                             + "MATCH (t:TaskList) WHERE t.id = $id "
                             + "CREATE (m)-[r:LISTED_IN]->(t) "
                             + "SET r.quantity = $qty "
-                            //                            + "SET r.functionalArea = $functionalArea "
                             + "SET r.actionInterval = $actionInterval "
                             + "SET r.action = $action;",
                             parameters("id", customerNumber,
                                     "materialNumber_id", materialNumber,
                                     "qty", quantity,
-                                    //                                    "functionalArea", functionalArea,
                                     "actionInterval", actionInterval,
                                     "action", action));
                     tx.success();  // Mark this write as successful.
@@ -615,11 +611,14 @@ public class FileLoadBean implements Serializable {
      * of recommended parts.
      */
     private void listUnknownMaterials(String taskListID, Map<Integer, TaskList> taskListMap) {
-        Set<String> qualifiedMtrlNoSet = new HashSet<>();
-        Set<String> taskListNumbersSet = new HashSet<>();
+//        Set<ImportMaterial> qualifiedMtrlNoSet = new HashSet<>();
+        Map<String, ImportMaterial> qualifiedMtrlNoMap = new HashMap<>();
+//        Set<ImportMaterial> taskListNumbersSet = new HashSet<>();
+        Map<String, ImportMaterial> taskListNumbersMap = new HashMap<>();
+
         // Sessions are lightweight and disposable connection wrappers.
         try (Session session = neo.getDRIVER().session()) {
-            String tx = "MATCH (:TaskList {id:$id})-[:LISTED_IN]-(m:PcMaterial) return m.materialNumber AS qualifiedMtrlNumbers;";
+            String tx = "MATCH (:TaskList {id:$id})-[:LISTED_IN]-(m:PcMaterial) RETURN m.materialNumber AS qualifiedMtrlNumbers, m.description AS description;";
 
             StatementResult result = session.run(tx, parameters("id", taskListID));
             gapExceptionFlag = false;
@@ -627,14 +626,20 @@ public class FileLoadBean implements Serializable {
                 Record next = result.next();
 
                 String qualifiedMtrlNumbersBW = next.get("qualifiedMtrlNumbers").asString();
+                String description = next.get("description").asString();
 
-                // Add to qualified material number set
-                qualifiedMtrlNoSet.add(qualifiedMtrlNumbersBW);
+                // Add to qualified material number map
+                qualifiedMtrlNoMap.put(qualifiedMtrlNumbersBW, new ImportMaterial(qualifiedMtrlNumbersBW, description));
 
             }
 
             if (!taskListMap.isEmpty()) {
-                taskListNumbersSet = taskListMap.values().stream().map(t -> t.getSparePartNo()).collect(Collectors.toSet());
+                taskListMap.values().stream().forEach(t -> {
+                    String spNumber = t.getSparePartNo();
+                    String spDenomination = t.getSpDenomination();
+
+                    taskListNumbersMap.put(spNumber, new ImportMaterial(spNumber, spDenomination));
+                });
             }
 
         } catch (Exception e) {
@@ -642,21 +647,23 @@ public class FileLoadBean implements Serializable {
             gapExceptionFlag = true;
         }
         if (!gapExceptionFlag) {
-            LOGGER.info("Succesfully establised gap between {} stored materials and {} parts in task list.", qualifiedMtrlNoSet.size(), taskListNumbersSet.size());
+            LOGGER.info("Succesfully establised gap between {} stored materials and {} parts in task list.", qualifiedMtrlNoMap.size(), taskListNumbersMap.size());
             unknownMaterialsList.clear();
-            taskListNumbersSet.removeAll(qualifiedMtrlNoSet);
-            taskListNumbersSet.stream().sorted().forEach(t -> {
+            qualifiedMtrlNoMap.keySet().stream().forEach(k -> {
+                taskListNumbersMap.remove(k);
+            });
+            taskListNumbersMap.values().stream().forEach(t -> {
                 unknownMaterialsList.add(t);
 //                System.out.printf("Task list material number '%s' doesn't exist in material DB.%n", t);
             });
         }
     }
 
-    public List<String> getUnknownMaterialsList() {
+    public List<ImportMaterial> getUnknownMaterialsList() {
         return unknownMaterialsList;
     }
 
-    public void setUnknownMaterialsList(List<String> unknownMaterialsList) {
+    public void setUnknownMaterialsList(List<ImportMaterial> unknownMaterialsList) {
         this.unknownMaterialsList = unknownMaterialsList;
     }
 

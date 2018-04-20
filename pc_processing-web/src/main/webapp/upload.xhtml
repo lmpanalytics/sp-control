@@ -138,12 +138,16 @@
                     </h:form>
 
                     <h:form>
-                         <p:dataTable id="unknownMaterialsTable" var="var" value="#{fileLoadBean.unknownMaterialsList}" resizableColumns="true" scrollable="true" scrollHeight="150" >
+                        <p:dataTable id="unknownMaterialsTable" var="var" value="#{fileLoadBean.unknownMaterialsList}" resizableColumns="true" scrollable="true" scrollHeight="150" >
                             <f:facet name="header">
                                 UNKNOWN TASK LIST MATERIALS
                             </f:facet>
-                            <p:column headerText="MTRL NUMBER" sortBy="#{var}">
-                                <h:outputText value="#{var}" />
+                            <p:column headerText="MTRL NUMBER" sortBy="#{var.partNumber}">
+                                <h:outputText value="#{var.partNumber}" />
+                            </p:column>
+
+                            <p:column headerText="DESCRIPTION" sortBy="#{var.materialDescription}">
+                                <h:outputText value="#{var.materialDescription}" />
                             </p:column>
 
                         </p:dataTable>
